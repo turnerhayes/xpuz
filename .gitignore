@@ -32,3 +32,7 @@ node_modules
 
 # Optional REPL history
 .node_repl_history
+
+# Sublime Text project and workspace files
+*.sublime-project
+*.sublime-workspace
