@@ -7,7 +7,6 @@ var _            = require('lodash');
 var iconv        = require('iconv-lite');
 var BinaryReader = require('binary-reader');
 var Puzzle       = require('../lib/puzzle');
-var Rebus        = require('../lib/rebus');
 
 
 var BLOCK_CELL_VALUE = '.';
@@ -127,6 +126,8 @@ function _readHeader(reader) {
 }
 
 function _processExtension(extension) {
+	var checksum;
+
 	if (extension.name === 'GRBS') {
 		extension.board = _.map(
 			extension.data,
@@ -190,11 +191,7 @@ function _processExtension(extension) {
 				return entry;
 			}
 		);
-
 	}
-
-	delete extension.checksum;
-	delete extension.data;
 
 	return extension;
 }
@@ -292,9 +289,9 @@ function _parseExtensions(reader, puzzleData) {
 				);
 			}
 
-			return {
-				timing: _.get(data, 'extensions.LTIM.timing')
-			};
+			puzzleData._extensions = data.extensions;
+
+			puzzleData.timing = _.get(data, 'extensions.LTIM.timing');
 		}
 	);
 }
@@ -621,6 +618,15 @@ function _validateChecksums(puzzleData) {
 		errors.push('magic checksums do not match');
 	}
 
+	_.each(
+		puzzleData._extensions,
+		function(extension, name) {
+			if (extension.checksum !== _doChecksum(extension.data)) {
+				errors.push('checksum for extension ' + name + ' does not match');
+			}
+		}
+	);
+
 	return errors;
 }
 
@@ -697,9 +703,7 @@ function _parsePuzzle(path) {
 			return _parseExtensions(reader, data);
 		}
 	).then(
-		function(extensions) {
-			data.extensions = extensions;
-
+		function() {
 			reader.close();
 		},
 		function(err) {
@@ -709,18 +713,6 @@ function _parsePuzzle(path) {
 
 
 	return deferred.promise;
-}
-
-function _validatePuzzle(puzzle) {
-	var checksumResults = _validateChecksums(puzzle);
-
-	var errors = [];
-
-	if (checksumResults) {
-		errors = errors.concat(checksumResults);
-	}
-
-	return _.isEmpty(errors) ? undefined : errors;
 }
 
 function PUZParser() {
@@ -756,7 +748,7 @@ PUZParser.prototype = Object.create(Object.prototype, {
 						clues: data.clues,
 						user_solution: data.solution,
 						extensions: {
-							timing: data.extensions.timing
+							timing: data.timing
 						}
 					};
 
@@ -769,7 +761,15 @@ PUZParser.prototype = Object.create(Object.prototype, {
 
 	validatePuzzle: {
 		value: function(puzzle) {
-			return _validatePuzzle(puzzle);
+			var checksumResults = _validateChecksums(puzzle);
+
+			var errors = [];
+
+			if (checksumResults) {
+				errors = errors.concat(checksumResults);
+			}
+
+			return _.isEmpty(errors) ? undefined : errors;
 		}
 	}
 });
