@@ -10,30 +10,36 @@ var parser = new IPUZParser();
 
 describe('IPUZParser', function() {
 	it('should not throw an exception with a valid puzzle file', function() {
-		expect(
-			function() {
-				parser.parse(
-					path.resolve(
-						__dirname,
-						'ipuz_files',
-						'high-tech-mergers.ipuz'
-					)
-				);
+		parser.parse(
+			path.resolve(
+				__dirname,
+				'ipuz_files',
+				'high-tech-mergers.ipuz'
+			)
+		).done(
+			function(puzzle) {
+				expect(true).to.be.ok();
+			},
+			function(err) {
+				expect().to.fail(err);
 			}
-		).to.not.throwException();
+		);
 	});
 
 	it('should throw an exception with an invalid puzzle file', function() {
-		expect(
-			function() {
-				parser.parse(
-					path.resolve(
-						__dirname,
-						'ipuz_files',
-						'high-tech-mergers-smaller-dimensions.ipuz'
-					)
-				);
+		parser.parse(
+			path.resolve(
+				__dirname,
+				'ipuz_files',
+				'high-tech-mergers-smaller-dimensions.ipuz'
+			)
+		).done(
+			function(puzzle) {
+				expect().to.fail();
+			},
+			function(err) {
+				expect(true).to.be.ok();
 			}
-		).to.throwException();
+		);
 	});
 });

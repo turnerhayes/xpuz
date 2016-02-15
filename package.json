@@ -1,14 +1,14 @@
 {
-  "name": "ipuz",
+  "name": "xpuz",
   "version": "0.0.0",
-  "description": "Parses and creates IPUZ formatted files",
+  "description": "Parses and creates crossword puzzle files",
   "main": "index.js",
   "scripts": {
     "test": "mocha"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/turnerhayes/ipuz.git"
+    "url": "git+https://github.com/turnerhayes/xpuz.git"
   },
   "keywords": [
     "ipuz",
@@ -19,13 +19,16 @@
   "author": "Turner Hayes <dev@turnerhayes.com>",
   "license": "GPL-3.0",
   "bugs": {
-    "url": "https://github.com/turnerhayes/ipuz/issues"
+    "url": "https://github.com/turnerhayes/xpuz/issues"
   },
-  "homepage": "https://github.com/turnerhayes/ipuz#readme",
+  "homepage": "https://github.com/turnerhayes/xpuz#readme",
   "devDependencies": {
     "mocha": "^2.3.4"
   },
   "dependencies": {
-    "lodash": "^4.0.0"
+    "binary-reader": "^0.1.2",
+    "iconv-lite": "^0.4.13",
+    "lodash": "^4.0.0",
+    "q": "^1.4.1"
   }
 }
