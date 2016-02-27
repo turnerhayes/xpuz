@@ -72,12 +72,12 @@ function _convertPuzzle(ipuz) {
 		),
 		clues: {
 			across: _.reduce(
-				ipuz.clues.Across,
+				ipuz.clues.across,
 				_addClue,
 				{}
 			),
 			down: _.reduce(
-				ipuz.clues.Down,
+				ipuz.clues.down,
 				_addClue,
 				{}
 			)

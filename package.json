@@ -1,6 +1,6 @@
 {
   "name": "xpuz",
-  "version": "0.0.0",
+  "version": "0.0.1",
   "description": "Parses and creates crossword puzzle files",
   "main": "index.js",
   "scripts": {
@@ -27,6 +27,7 @@
   },
   "dependencies": {
     "binary-reader": "^0.1.2",
+    "buffer-reader": "^0.1.0",
     "iconv-lite": "^0.4.13",
     "lodash": "^4.0.0",
     "q": "^1.4.1"
