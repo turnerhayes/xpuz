@@ -11,6 +11,8 @@ var Puzzle       = require('../lib/puzzle');
 
 var BLOCK_CELL_VALUE = '.';
 
+var BLOCK_CELL_VALUE_REGEX = /\./g;
+
 var EXTENSION_HEADER_LENGTH = 8;
 
 var PUZZLE_TYPE = {
@@ -32,6 +34,8 @@ var CELL_STATES = {
 	Circled: 0x80
 };
 
+var ATOZ = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+
 function _doChecksum(buffer, cksum) {
 	var i;
 
@@ -52,87 +56,41 @@ function _doChecksum(buffer, cksum) {
 	return cksum;
 }
 
-function _readHeader(reader) {
+function _readHeader(reader, options) {
 	var data = {};
 	var deferred = Q.defer();
 
-	return reader._readUInt16().then(
-		function(globalChecksum) {
-			data.globalChecksum = globalChecksum;
+	data.globalChecksum = reader._readUInt16();
 
-			return reader._seek('ACROSS&DOWN\0'.length, { current: true }).then(
-				function() {
-					return reader._readUInt16();
-				}
-			);
-		}
-	).then(
-		function(headerChecksum) {
-			data.headerChecksum = headerChecksum;
+	reader._seek('ACROSS&DOWN\0'.length, { current: true });
 
-			return reader._readValues(8);
-		}
-	).then(
-		function(magicChecksum) {
-			data.magicChecksum = magicChecksum;
+	data.headerChecksum = reader._readUInt16();
 
-			return reader._readString();
-		}
-	).then(
-		function(version) {
-			data.version = version;
+	data.magicChecksum = reader._readValues(8);
 
-			return reader._readValues(2);
-		}
-	).then(
-		function(unknown1) {
-			data.unknown1 = unknown1;
+	data.version = reader._readString();
 
-			return reader._readUInt16();
-		}
-	).then(
-		function(scrambledChecksum) {
-			data.scrambledChecksum = scrambledChecksum;
+	data.unknown1 = reader._readValues(2);
 
-			return reader._readValues(12);
-		}
-	).then(
-		function(unknown2) {
-			data.unknown2 = unknown2;
+	data.scrambledChecksum = reader._readUInt16();
 
-			return reader._readUInt8();
-		}
-	).then(
-		function(width) {
-			data.width = width;
+	data.unknown2 = reader._readValues(12);
 
-			return reader._readUInt8();
-		}
-	).then(
-		function(height) {
-			data.height = height;
+	data.width = reader._readUInt8();
 
-			return reader._readUInt16();
-		}
-	).then(
-		function(numberOfClues) {
-			data.numberOfClues = numberOfClues;
+	data.height = reader._readUInt8();
 
-			return reader._readUInt16();
-		}
-	).then(
-		function(puzzleType) {
-			data.puzzleType = puzzleType;
+	data.numberOfClues = reader._readUInt16();
 
-			return reader._readUInt16();
-		}
-	).then(
-		function(solutionState) {
-			data.solutionState = solutionState;
+	data.puzzleType = reader._readUInt16();
 
-			return data;
-		}
-	);
+	data.solutionState = reader._readUInt16();
+
+	if (data.solutionState === SOLUTION_STATE.Locked && !options.solutionKey) {
+		throw new Error('Puzzle solution is locked and no solutionKey option was provided');
+	}
+
+	return data;
 }
 
 function _processExtension(extension) {
@@ -209,101 +167,81 @@ function _processExtension(extension) {
 function _readExtension(reader) {
 	var extension = {};
 
-	return reader._readString(4).then(
-		function(extensionName) {
-			extension.name = extensionName;
+	var length;
 
-			return reader._readUInt16();
-		}
-	).then(
-		function(length) {
-			extension.length = length;
+	extension.extensionName = reader._readString(4);
 
-			return reader._readUInt16();
-		}
-	).then(
-		function(checksum) {
-			extension.checksum = checksum;
+	length = reader._readUInt16();
 
-			// Include null byte at end
-			return reader._readValues(extension.length + 1);
-		}
-	).then(
-		function(data) {
-			// Remove null byte at the end
-			extension.data = data.slice(0, -1);
+	extension.checksum = reader._readUInt16();
 
-			delete extension.length;
+	// Include null byte at end
+	extension.data = reader._readValues(length + 1);
+	// Remove null byte at the end
+	extension.data = extension.data.slice(0, -1);
 
-			return _processExtension(extension);
-		}
-	);
+	return _processExtension(extension);
 }
 
 function _parseEnd(reader, data) {
 	var remainingLength = reader.size() - reader.tell();
+	var extension;
 
 	if (remainingLength >= EXTENSION_HEADER_LENGTH) {
-		return _readExtension(reader).then(
-			function(extension) {
-				data.extensions = data.extensions || {};
-				data.extensions[extension.name] = extension;
+		extension = _readExtension(reader);
 
-				delete extension.name;
+		data.extensions = data.extensions || {};
+		data.extensions[extension.name] = extension;
 
-				return _parseEnd(reader, data);
-			}
-		);
+		delete extension.name;
+
+		_parseEnd(reader, data);
 	}
-
-	return Q();
 }
 
 function _parseExtensions(reader, puzzleData) {
 	var data = {};
 
-	return _parseEnd(reader, data).then(
-		function() {
-			var rebus = [];
+	_parseEnd(reader, data);
 
-			if (_.get(data, 'extensions.GRBS')) {
-				_.each(
-					_.flatten(puzzleData.grid),
-					function(cell, index) {
-						var c = cell;
+	var rebus = [];
 
-						if (_.isNull(data.extensions.GRBS.board[index])) {
-							return;
-						}
+	if (_.get(data, 'extensions.GRBS')) {
+		_.each(
+			_.flatten(puzzleData.grid),
+			function(cell, index) {
+				var c = cell;
 
-						var rebusSolution = data.extensions.RTBL.rebus_solutions[
-							data.extensions.GRBS.board[index]
-						];
+				if (_.isNull(data.extensions.GRBS.board[index])) {
+					return;
+				}
 
-						c.solution = rebusSolution;
-					}
-				);
+				var rebusSolution = data.extensions.RTBL.rebus_solutions[
+					data.extensions.GRBS.board[index]
+				];
+
+				c.solution = rebusSolution;
 			}
+		);
+	}
 
-			if (_.get(data, 'extensions.RUSR')) {
-				_.each(
-					data.extensions.RUSR.user_rebus_entries,
-					function(rusr, index) {
-						if (!_.isNull(rusr)) {
-							var y = Math.floor(index / puzzleData.header.width);
-							var x = index % puzzleData.header.width;
+	if (_.get(data, 'extensions.RUSR')) {
+		_.each(
+			data.extensions.RUSR.user_rebus_entries,
+			function(rusr, index) {
+				if (!_.isNull(rusr)) {
+					var y = Math.floor(index / puzzleData.header.width);
+					var x = index % puzzleData.header.width;
 
-							puzzleData.solution[y][x] = rusr;
-						}
-					}
-				);
+					puzzleData.solution[y][x] = rusr;
+				}
 			}
+		);
+	}
 
-			puzzleData._extensions = data.extensions;
+	puzzleData._extensions = data.extensions;
 
-			puzzleData.timing = _.get(data, 'extensions.LTIM.timing');
-		}
-	);
+	puzzleData.timing = _.get(data, 'extensions.LTIM.timing');
 }
 
 function _readClues(reader, numberOfClues) {
@@ -314,22 +252,10 @@ function _readClues(reader, numberOfClues) {
 	var i;
 
 	for (i = 0; i < numberOfClues; i++) {
-		promise = promise.then(
-			function() {
-				return reader._readString();
-			}
-		).then(
-			function(clue) {
-				clues.push(clue);
-			}
-		);
+		clues.push(reader._readString());
 	}
 
-	return promise.then(
-		function() {
-			return clues;
-		}
-	);
+	return clues;
 }
 
 function _generateGridAndClues(answers, clueList) {
@@ -543,7 +469,7 @@ function _magicChecksum(puzzleData) {
 }
 
 function _transposeGrid(gridString, width, height) {
-	var data = grid.match(new RegExp('.{1,' + width + '}', 'g'));
+	var data = gridString.match(new RegExp('.{1,' + width + '}', 'g'));
 
 	return _.map(
 		_.range(width),
@@ -558,8 +484,152 @@ function _transposeGrid(gridString, width, height) {
 	).join('');
 }
 
-function _scrambledChecksum(puzzleData) {
 
+function _restoreSolution(s, t) {
+	/*
+	s is the source string, it can contain '.'
+	t is the target, it's smaller than s by the number of '.'s in s
+
+	Each char in s is replaced by the corresponding
+	char in t, jumping over '.'s in s.
+
+	>>> restore('ABC.DEF', 'XYZABC')
+	'XYZ.ABC'
+	*/
+    
+	t = t.split('');
+
+	return _.reduce(
+		s,
+		function(arr, c) {
+			if (c === BLOCK_CELL_VALUE) {
+				arr.push(c);
+			}
+			else {
+				arr.push(t.shift());
+			}
+
+			return arr;
+		},
+		[]
+	).join('');
+}
+
+function _unscrambleString(str, key) {
+	var len = str.length;
+
+	_.each(
+		_.reverse(_.padStart(key, 4, '0').split('')),
+		function(k) {
+			str = _unshuffle(str);
+			str = str.substring(len - k) + str.substring(0, len - k);
+			str = _unshift(str, key);
+		}
+	);
+
+	return str;
+}
+
+function _scrambleString(str, key) {
+	/*
+	s is the puzzle's solution in column-major order, omitting black squares:
+	i.e. if the puzzle is:
+		C A T
+		# # A
+		# # R
+	solution is CATAR
+
+
+	Key is a 4-digit number in the range 1000 <= key <= 9999
+
+    */
+
+    _.each(
+    	_.padStart(key, 4, '0'),
+    	function(k) {
+    		str = _shift(str, key);
+    		str = str.substring(k) + str.substring(0, k);
+    		str = _shuffle(str);
+    	}
+	);
+
+    return str;
+}
+
+
+function _shift(str, key) {
+	return _.map(
+		str,
+		function(c, index) {
+			var letterIndex = (_.indexOf(ATOZ, c) + Number(key[index % key.length])) % ATOZ.length;
+
+			if (letterIndex < 0) {
+				letterIndex = ATOZ.length + letterIndex;
+			}
+
+			return ATOZ[letterIndex];
+		}
+	).join('');
+}
+
+function _unshift(str, key) {
+	return _shift(
+		str,
+		_.map(
+			key,
+			function(k) {
+				return -k;
+			}
+		)
+	);
+}
+
+function _shuffle(str) {
+    var mid = Math.floor(str.length / 2);
+    return _.reduce(
+    	_.zip(
+    		str.substring(mid).split(''),
+    		str.substring(0, mid).split('')
+    	),
+    	function(arr, chars) {
+    		if (_.isUndefined(chars[0]) || _.isUndefined(chars[1])) {
+    			return arr;
+    		}
+
+    		arr.push(chars[0] + chars[1]);
+
+    		return arr;
+    	},
+    	[]
+    ).join('') + (str.length % 2 ? str[str.length - 1] : '');
+}
+
+function _unshuffle(str) {
+	return _everyOther(str.substring(1)) + _everyOther(str);
+}
+
+function _everyOther(str) {
+	return _.reduce(
+		str,
+		function(arr, c, i) {
+			if (i % 2 === 0) {
+				arr.push(c);
+			}
+
+			return arr;
+		},
+		[]
+	).join('');
+}
+
+function _scrambledChecksum(answer, width, height) {
+	var transposed = _transposeGrid(
+		_flattenSolution(answer),
+		width,
+		height
+	).replace(BLOCK_CELL_VALUE_REGEX, '');
+
+	return _doChecksum(iconv.encode(transposed, PUZReader.ENCODING));
 }
 
 function _validateChecksums(puzzleData) {
@@ -605,6 +675,54 @@ function _validateChecksums(puzzleData) {
 	return errors;
 }
 
+function _scrambleSolution(solutionGrid, key) {
+	var height = solutionGrid.length;
+	var width = solutionGrid[0].length;
+
+	var solutionString = _.flatten(
+		_flattenSolution(solutionGrid)
+	).join('');
+
+	var transposed = _transposeGrid(solutionString, width, height);
+
+	var data = _restoreSolution(
+		transposed,
+		_scrambleString(transposed.replace(BLOCK_CELL_VALUE_REGEX, ''), key)
+	);
+
+	solutionString = _transposeGrid(data, height, width);
+
+	return _.chunk(solutionString.split(''), width);
+}
+
+function _unscrambleSolution(puzzleData, key) {
+	var transposed = _transposeGrid(
+		puzzleData.answer,
+		puzzleData.header.width,
+		puzzleData.header.height
+	);
+
+	var data = _restoreSolution(
+		transposed,
+		_unscrambleString(
+			transposed.replace(BLOCK_CELL_VALUE_REGEX, ''),
+			key
+		)
+	);
+
+	var result = _transposeGrid(
+		data,
+		puzzleData.header.height,
+		puzzleData.header.width
+	);
+
+	if (result === puzzleData.answer) {
+		throw new Error('Unscrambled solution is the same as the scrambled solution; incorrect key?');
+	}
+
+	return result;
+}
+
 function _writeHeader(puzzleData, options) {
 	var globalChecksumBuffer = new Buffer(2);
 
@@ -618,8 +736,14 @@ function _writeHeader(puzzleData, options) {
 
 	var scrambledChecksumBuffer = new Buffer(2);
 
-	if (_.get(options, 'scramble')) {
-		scrambledChecksumBuffer.writeUInt16LE(_scrambledChecksum(puzzleData));
+	if (_.get(options, 'scrambled')) {
+		scrambledChecksumBuffer.writeUInt16LE(
+			_scrambledChecksum(
+				puzzleData.unscrambledAnswer,
+				puzzleData.header.width,
+				puzzleData.header.height
+			)
+		);
 	}
 	else {
 		scrambledChecksumBuffer.fill(0x0);
@@ -791,79 +915,53 @@ function _writeRebus(answerArray, userSolutionArray, extensions) {
 	);
 }
 
-function _parsePuzzle(path) {
+function _parsePuzzle(path, options) {
 	var data = {};
 
 	var reader = new PUZReader(path);
 
-	return _readHeader(reader).then(
-		function(header) {
-			data.header = header;
+	data.header = _readHeader(reader, options);
 
-			var numberOfCells = data.header.width * data.header.height;
+	var numberOfCells = data.header.width * data.header.height;
 
-			return reader._readValues(numberOfCells).then(
-				function(buffer) {
-					data.answer = iconv.decode(buffer, PUZReader.ENCODING);
+	data.answer = reader._readString(numberOfCells);
 
-					return reader._readValues(numberOfCells);
-				}
-			).then(
-				function(buffer) {
-					data.solution = iconv.decode(buffer, PUZReader.ENCODING);
+	if (data.header.solutionState === SOLUTION_STATE.Locked) {						
+		data.unscrambledAnswer = _unscrambleSolution(
+			{
+				header: data.header,
+				answer: data.answer
+			},
+			options.solutionKey
+		);
+	}
+	else {
+		data.unscrambledAnswer = data.answer;
+	}
 
-					return reader._readString();
-				}
-			);
-		}
-	).then(
-		function(title) {
-			data.title = title;
+	data.solution = reader._readString(numberOfCells);
 
-			return reader._readString();
-		}
-	).then(
-		function(author) {
-			data.author = author;
+	data.title = reader._readString();
 
-			return reader._readString();
-		}
-	).then(
-		function(copyright) {
-			data.copyright = copyright;
+	data.author = reader._readString();
 
-			return _readClues(reader, data.header.numberOfClues);
-		}
-	).then(
-		function(clues) {
-			data.clueList = clues;
-			var gridAndClues = _generateGridAndClues(
-				_unflattenSolution(data.answer, data.header.width),
-				clues
-			);
+	data.copyright = reader._readString();
 
-			data.grid = gridAndClues.grid;
-			data.clues = gridAndClues.clues;
+	data.clueList = _readClues(reader, data.header.numberOfClues);
 
-			return reader._readString();
-		}
-	).then(
-		function(notes) {
-			data.notes = notes;
-
-			return _parseExtensions(reader, data);
-		}
-	).then(
-		function() {
-			reader.close();
-
-			return reader.promise;
-		}
-	).then(
-		function() {
-			return data;
-		}
+	var gridAndClues = _generateGridAndClues(
+		_unflattenSolution(data.unscrambledAnswer, data.header.width),
+		data.clueList
 	);
+
+	data.grid = gridAndClues.grid;
+	data.clues = gridAndClues.clues;
+
+	data.notes = reader._readString();
+
+	 _parseExtensions(reader, data);
+
+	 return data;
 }
 
 function PUZParser() {
@@ -875,39 +973,43 @@ function PUZParser() {
 
 PUZParser.prototype = Object.create(Object.prototype, {
 	parse: {
-		value: function(path) {
+		value: function(path, options) {
 			var parser = this;
 			var deferred = Q.defer();
 
-			return _parsePuzzle(path).then(
-				function(puzzleData) {
-					var errors = parser.validatePuzzle(puzzleData);
+			options = options || {};
 
-					if (!_.isUndefined(errors)) {
-						throw new Error('Invalid puzzle:\n\t' + errors.join('\n\t'));
+			var puzzleData;
+
+			try {
+				puzzleData = _parsePuzzle(path, options);
+
+				var errors = parser.validatePuzzle(puzzleData);
+
+				if (!_.isUndefined(errors)) {
+					throw new Error('Invalid puzzle:\n\t' + errors.join('\n\t'));
+				}
+
+				var puzzleDefinition = {
+					title: puzzleData.title,
+					author: puzzleData.author,
+					copyright: puzzleData.copyright,
+					intro: puzzleData.notes || undefined,
+					grid: puzzleData.grid,
+					clues: puzzleData.clues,
+					userSolution: _unflattenSolution(puzzleData.solution, puzzleData.header.width),
+					extensions: {
+						timing: puzzleData.timing
 					}
+				};
 
-					return puzzleData;
-				}
-			).then(
-				function(data) {
-					var puzzleDefinition = {
-						title: data.title,
-						author: data.author,
-						copyright: data.copyright,
-						intro: data.notes || undefined,
-						grid: data.grid,
-						clues: data.clues,
-						userSolution: _unflattenSolution(data.solution, data.header.width),
-						extensions: {
-							timing: data.timing
-						}
-					};
+				deferred.resolve(new Puzzle(puzzleDefinition));
+			}
+			catch(err) {
+				deferred.reject(err);
+			}
 
-					return new Puzzle(puzzleDefinition);
-				}
-			);
-			
+			return deferred.promise;
 		}
 	},
 
@@ -917,14 +1019,33 @@ PUZParser.prototype = Object.create(Object.prototype, {
 			var puzzleType = PUZZLE_TYPE.Normal;
 			var solutionState = SOLUTION_STATE.Unlocked;
 
+			options = options || {};
+
 			var height = _.size(puzzle.grid);
 			var width = _.size(puzzle.grid[0]);
 
 			var notes = puzzle.info.intro || '';
 
 			var answerArray = _pluckSolutions(puzzle.grid);
+			var unscrambledAnswerArray;
+
+			if (options.scrambled) {
+				if (
+					!options.solutionKey ||
+					Number(options.solutionKey) < 1000 ||
+					Number(options.solutionKey) > 9999
+				) {
+					throw new Error('Must specify a solution key that is an integer >= 1000 and <= 9999');
+				}
+
+				unscrambledAnswerArray = answerArray;
+				answerArray = _scrambleSolution(answerArray, options.solutionKey);
+
+				solutionState = SOLUTION_STATE.Locked;
+			}
 
 			var flattenedAnswerArray = _.flatten(answerArray);
+			var flattenedUnscrambledAnswerArray = _.flatten(unscrambledAnswerArray);
 
 			var userSolution = _.map(
 				puzzle.userSolution,
@@ -973,6 +1094,7 @@ PUZParser.prototype = Object.create(Object.prototype, {
 					solutionState: solutionState
 				},
 				answer: _flattenSolution(flattenedAnswerArray),
+				unscrambledAnswer: _flattenSolution(flattenedUnscrambledAnswerArray),
 				solution: _flattenSolution(userSolution),
 				title: puzzle.info.title,
 				author: puzzle.info.author,
@@ -1024,12 +1146,12 @@ PUZParser.prototype = Object.create(Object.prototype, {
 			);
 
 			if (
-				_.some(flattenedAnswerArray, function(solution) {
+				_.some(flattenedUnscrambledAnswerArray, function(solution) {
 					return solution.length > 1;
 				})
 			) {
 				var rebusBuffer = _writeRebus(
-					flattenedAnswerArray,
+					flattenedUnscrambledAnswerArray,
 					userSolutionArray,
 					puzzle.extensions || {}
 				);
