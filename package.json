@@ -1,6 +1,6 @@
 {
   "name": "xpuz",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "Parses and creates crossword puzzle files",
   "main": "index.js",
   "scripts": {
