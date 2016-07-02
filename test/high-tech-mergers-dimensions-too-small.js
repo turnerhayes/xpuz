@@ -4,7 +4,7 @@
 
 var path = require('path');
 var expect = require('expect.js');
-var IPUZParser = require('../index');
+var IPUZParser = require('../parsers/ipuz');
 
 var parser = new IPUZParser();
 

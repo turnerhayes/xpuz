@@ -3,8 +3,6 @@
 var fs = require('fs');
 var _  = require('lodash');
 var Puzzle = require('../lib/puzzle');
-var BlockCell = require('../lib/cells/block');
-var CrosswordCell = require('../lib/cells/crossword');
 
 function JPZParser() {
 	if (!(this instanceof JPZParser)) {

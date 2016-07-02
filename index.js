@@ -1,3 +1,7 @@
 "use strict";
 
-exports = module.exports = require('./parsers/ipuz');
+exports = module.exports = {
+	IPUZ: require('./parsers/ipuz'),
+	PUZ: require('./parsers/puz'),
+	JPZ: require('./parsers/jpz'),
+};
