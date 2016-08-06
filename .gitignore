@@ -36,3 +36,9 @@ node_modules
 # Sublime Text project and workspace files
 *.sublime-project
 *.sublime-workspace
+
+# Generated scripts
+dist/
+
+# Generated documentation
+docs/
