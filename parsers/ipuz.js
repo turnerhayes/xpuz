@@ -7,22 +7,22 @@
  * @module xpuz/parsers/ipuz
  */
 
-const fs     = require('fs');
-const _      = require('lodash');
-const Q      = require('q');
-const Puzzle = require('../lib/puzzle');
+var fs     = require('fs');
+var _      = require('lodash');
+var Q      = require('q');
+var Puzzle = require('../lib/puzzle');
 
-const BLOCK_VALUE = '#';
+var BLOCK_VALUE = '#';
 
 function _checkDimensions(puzzle) {
-	let errors = [];
+	var errors = [];
 
-	let maxCellWidth = _.max(
+	var maxCellWidth = _.max(
 		puzzle.puzzle,
 		'length'
 	).length;
 
-	let numRows = puzzle.puzzle.length;
+	var numRows = puzzle.puzzle.length;
 
 	if (maxCellWidth > puzzle.dimensions.width) {
 		errors.push('Too many puzzle cells (' + maxCellWidth +
@@ -50,7 +50,7 @@ function _convertPuzzle(ipuz) {
 		return obj;
 	}
 
-	let puzzle = new Puzzle({
+	var puzzle = new Puzzle({
 		title: ipuz.title,
 		author: ipuz.author,
 		copyright: ipuz.copyright,
@@ -95,7 +95,7 @@ function _convertPuzzle(ipuz) {
 }
 
 function _validatePuzzle(puzzle) {
-	let errors = [];
+	var errors = [];
 
 	if (!puzzle.dimensions) {
 		errors.push("Puzzle is missing 'dimensions' key");
@@ -116,60 +116,70 @@ function _validatePuzzle(puzzle) {
 }
 
 /**
- * @description Parser class for IPUZ-formatted puzzles
+ * Parser class for IPUZ-formatted puzzles
  */
-class IPUZParser {
+function IPUZParser() {
+	if (!(this instanceof IPUZParser)) {
+		return new IPUZParser();
+	}
+}
+
+IPUZParser.prototype = Object.create(Object.prototype, {
 	/**
 	 * @description Parses a {@link module:xpuz/puzzle~Puzzle} from the input
 	 * @param puzzle {string|object} the source to parse the puzzle from; if a string,
 	 *	it is assumed to be a file path, if an object, it defines a Puzzle object
 	 * @returns {module:xpuz/puzzle~Puzzle} the parsed puzzle object
 	 */
-	parse(puzzle) {
-		const parser = this;
-		let filePath;
+	parse: {
+		configurable: true,
+		value: function parse(puzzle) {
+			var parser = this;
+			var filePath;
 
-		let deferred = Q.defer();
+			var deferred = Q.defer();
 
-		if (_.isString(puzzle)) {
-			// path to puzzle
-			filePath = puzzle;
-			try {
-				puzzle = JSON.parse(String(fs.readFileSync(filePath)));
+			if (_.isString(puzzle)) {
+				// path to puzzle
+				filePath = puzzle;
+				try {
+					puzzle = JSON.parse(String(fs.readFileSync(filePath)));
+				}
+				catch (ex) {
+					deferred.reject(
+						'Unable to read IPUZ puzzle from file ' +
+							puzzle + ': ' + ex.message
+					);
+
+					return deferred.promise;
+				}
 			}
-			catch (ex) {
+			else if (_.isObject(puzzle)) {
+				puzzle = puzzle;
+			}
+			else {
 				deferred.reject(
-					'Unable to read IPUZ puzzle from file ' +
-						puzzle + ': ' + ex.message
+					'parse() expects either a path string or a JSON object'
 				);
 
 				return deferred.promise;
 			}
-		}
-		else if (_.isObject(puzzle)) {
-			puzzle = puzzle;
-		}
-		else {
-			deferred.reject(
-				'parse() expects either a path string or a JSON object'
-			);
+
+			var errors = _validatePuzzle(puzzle);
+
+			if (!_.isUndefined(errors)) {
+				deferred.reject(
+					'Invalid puzzle:\n\t' + errors.join('\n\t')
+				);
+			}
+			else {
+				deferred.resolve(_convertPuzzle(puzzle));
+			}
 
 			return deferred.promise;
 		}
+	},
+});
 
-		let errors = _validatePuzzle(puzzle);
-
-		if (!_.isUndefined(errors)) {
-			deferred.reject(
-				'Invalid puzzle:\n\t' + errors.join('\n\t')
-			);
-		}
-		else {
-			deferred.resolve(_convertPuzzle(puzzle));
-		}
-
-		return deferred.promise;
-	}
-}
 
 exports = module.exports = IPUZParser;

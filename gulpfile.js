@@ -1,33 +1,33 @@
 "use strict";
 
-const _                    = require('lodash');
-const path                 = require('path');
-const fs                   = require('fs');
-const del                  = require('del');
+var _                    = require('lodash');
+var path                 = require('path');
+var fs                   = require('fs');
+var del                  = require('del');
 
-const gulp                 = require('gulp');
-const gulpIf               = require('gulp-if');
-const jshint               = require('gulp-jshint');
-const gutil                = require('gulp-util');
-const sourcemaps           = require('gulp-sourcemaps');
-const uglify               = require('gulp-uglify');
-const jsdoc                = require('gulp-jsdoc3');
+var gulp                 = require('gulp');
+var gulpIf               = require('gulp-if');
+var jshint               = require('gulp-jshint');
+var gutil                = require('gulp-util');
+var sourcemaps           = require('gulp-sourcemaps');
+var uglify               = require('gulp-uglify');
+var jsdoc                = require('gulp-jsdoc3');
 
-const watchify             = require('watchify');
-const browserify           = require('browserify');
-const babelify             = require('babelify');
-const source               = require('vinyl-source-stream');
-const buffer               = require('vinyl-buffer');
-const merge                = require('merge-stream');
-const stylish              = require('jshint-stylish');
+var watchify             = require('watchify');
+var browserify           = require('browserify');
+var babelify             = require('babelify');
+var source               = require('vinyl-source-stream');
+var buffer               = require('vinyl-buffer');
+var merge                = require('merge-stream');
+var stylish              = require('jshint-stylish');
 
-const IS_DEVELOPMENT = process.env.NODE_ENV ? process.env.NODE_ENV === 'development' : true;
+var IS_DEVELOPMENT = process.env.NODE_ENV ? process.env.NODE_ENV === 'development' : true;
 
-const documentationDirectory = path.join(__dirname, 'docs');
+var documentationDirectory = path.join(__dirname, 'docs');
 
-const buildDirectory = path.join(__dirname, 'dist');
+var buildDirectory = path.join(__dirname, 'dist');
 
-const jsFileBlobs = ['index.js', 'parsers/**/*.js', 'lib/**/*.js'];
+var jsFileBlobs = ['index.js', 'parsers/**/*.js', 'lib/**/*.js'];
 
 var browserifyOptions = _.extend({}, watchify.args, {
 	debug: IS_DEVELOPMENT,
@@ -182,7 +182,7 @@ gulp.task('docs', ['clean-docs'], function(done) {
 			throw new Error(err);
 		}
 
-		let jsdocConfig = JSON.parse(configText);
+		var jsdocConfig = JSON.parse(configText);
 
 		jsdocConfig.opts = jsdocConfig.opts || {};
 		jsdocConfig.opts.destination = documentationDirectory;

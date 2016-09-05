@@ -964,6 +964,9 @@ function _parsePuzzle(path, options) {
 	 return data;
 }
 
+/*
+ * Parser class for PUZ-formatted puzzles
+ */
 function PUZParser() {
 	if (!(this instanceof PUZParser)) {
 		return new PUZParser();
@@ -973,7 +976,7 @@ function PUZParser() {
 
 PUZParser.prototype = Object.create(Object.prototype, {
 	parse: {
-		value: function(path, options) {
+		value: function parse(path, options) {
 			var parser = this;
 			var deferred = Q.defer();
 
@@ -1014,7 +1017,7 @@ PUZParser.prototype = Object.create(Object.prototype, {
 	},
 
 	generate: {
-		value: function(puzzle, options) {
+		value: function generate(puzzle, options) {
 			var numberOfClues = _.size(puzzle.clues.across) + _.size(puzzle.clues.down);
 			var puzzleType = PUZZLE_TYPE.Normal;
 			var solutionState = SOLUTION_STATE.Unlocked;
@@ -1170,7 +1173,7 @@ PUZParser.prototype = Object.create(Object.prototype, {
 	},
 
 	validatePuzzle: {
-		value: function(puzzle) {
+		value: function validatePuzzle(puzzle) {
 			var checksumResults = _validateChecksums(puzzle);
 
 			var errors = [];
