@@ -100,6 +100,10 @@ PUZReader.prototype = Object.create(Object.prototype, {
 				bufferLength = size - currentPosition;
 			}
 
+			if (bufferLength === 0) {
+				return '';
+			}
+
 			var buffer = reader._readValues(bufferLength);
 			var str = iconv.decode(buffer, ENCODING);
 

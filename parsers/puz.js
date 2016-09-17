@@ -367,8 +367,12 @@ function _flattenSolution(solution) {
 	return _.map(
 		_.flatten(solution),
 		function(entry) {
-			if (!entry) {
+			if (_.isNull(entry)) {
 				return entry;
+			}
+
+			if (entry === '') {
+				return '-';
 			}
 
 			return entry[0];
@@ -377,9 +381,23 @@ function _flattenSolution(solution) {
 }
 
 function _unflattenSolution(solution, width) {
-	return _.chunk(
-		solution.split(''),
-		width
+	return _.map(
+		_.chunk(
+			solution.split(''),
+			width
+		),
+		function(row) {
+			return _.map(
+				row,
+				function(cell) {
+					if (cell === '-') {
+						return '';
+					}
+
+					return cell;
+				}
+			);
+		}
 	);
 }
 
