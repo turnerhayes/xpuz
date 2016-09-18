@@ -203,7 +203,10 @@ gulp.task('symlink-docs', function(done) {
 						catch(e) {}
 						
 						fs.symlinkSync(
-							path.join(currentVersionDocumentationDirectory, file),
+							path.relative(
+								documentationDirectory,
+								path.join(currentVersionDocumentationDirectory, file)
+							),
 							symlinkedFile
 						);
 					}
