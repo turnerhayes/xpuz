@@ -1,73 +1,57 @@
 "use strict";
 
-var _                    = require('lodash');
-var path                 = require('path');
-var fs                   = require('fs');
-var del                  = require('del');
+const _                    = require('lodash');
+const path                 = require('path');
+const fs                   = require('fs');
+const del                  = require('del');
+const xpuzPackage          = require('./package');
 
-var gulp                 = require('gulp');
-var gulpIf               = require('gulp-if');
-var jshint               = require('gulp-jshint');
-var gutil                = require('gulp-util');
-var sourcemaps           = require('gulp-sourcemaps');
-var uglify               = require('gulp-uglify');
-var jsdoc                = require('gulp-jsdoc3');
+const gulp                 = require('gulp');
+const gulpIf               = require('gulp-if');
+const jshint               = require('gulp-jshint');
+const gutil                = require('gulp-util');
+const sourcemaps           = require('gulp-sourcemaps');
+const uglify               = require('gulp-uglify');
+const jsdoc                = require('gulp-jsdoc3');
 
-var watchify             = require('watchify');
-var browserify           = require('browserify');
-var babelify             = require('babelify');
-var source               = require('vinyl-source-stream');
-var buffer               = require('vinyl-buffer');
-var merge                = require('merge-stream');
-var stylish              = require('jshint-stylish');
+const watchify             = require('watchify');
+const browserify           = require('browserify');
+const babelify             = require('babelify');
+const source               = require('vinyl-source-stream');
+const buffer               = require('vinyl-buffer');
+const merge                = require('merge-stream');
+const stylish              = require('jshint-stylish');
 
-var IS_DEVELOPMENT = process.env.NODE_ENV ? process.env.NODE_ENV === 'development' : true;
+const IS_DEVELOPMENT = process.env.NODE_ENV ? process.env.NODE_ENV === 'development' : true;
 
-var documentationDirectory = path.join(__dirname, 'docs');
+const documentationDirectory = path.join(__dirname, 'docs');
+const currentVersionDocumentationDirectory = path.join(documentationDirectory, 'xpuz', xpuzPackage.version);
 
-var buildDirectory = path.join(__dirname, 'dist');
+const buildDirectory = path.join(__dirname, 'dist');
 
-var jsFileBlobs = ['index.js', 'parsers/**/*.js', 'lib/**/*.js'];
+const jsFileBlobs = ['index.js', 'parsers/**/*.js', 'lib/**/*.js'];
 
-var browserifyOptions = _.extend({}, watchify.args, {
+const browserifyOptions = _.extend({}, watchify.args, {
 	debug: IS_DEVELOPMENT,
 });
 
-var babelifyOptions = {
+const babelifyOptions = {
 	sourceRoot: __dirname,
 	presets: ['es2015'],
 	comments: IS_DEVELOPMENT,
 	babelrc: false
 };
 
-function _changeEventToOperation(eventType) {
-	var operation;
-
-	switch(eventType) {
-		case 'add': 
-			operation = 'addition of';
-			break;
-		case 'unlink':
-			operation = 'deletion of';
-			break;
-		case 'change':
-			operation = 'changes to';
-			break;
-	}
-
-	return operation;
-}
-
 function _cleanBuild() {
 	return del(path.join(buildDirectory, '*'));
 }
 
 function _cleanDocumentation() {
-	return del(path.join(documentationDirectory, '*'));
+	return del(path.join(currentVersionDocumentationDirectory, '*'));
 }
 
 function _changeEventToOperation(eventType) {
-	var operation;
+	let operation;
 
 	switch(eventType) {
 		case 'add': 
@@ -98,7 +82,7 @@ function _compileScripts(bundler, changedFiles) {
 		).join('\n')
 	);
 
-	var compileStream = bundler
+	const compileStream = bundler
 		.bundle()
 		.on('error', function(err) {
 			gutil.log(gutil.colors.red('Browserify Error\n'), err.message, err.stack || '');
@@ -125,7 +109,7 @@ function _compileScripts(bundler, changedFiles) {
 }
 
 function _scriptsTask(watch) {
-	var bundler = browserify([path.join(__dirname, 'index.js')], browserifyOptions);
+	let bundler = browserify([path.join(__dirname, 'index.js')], browserifyOptions);
 	
 	if (watch) {
 		bundler = watchify(bundler);
@@ -176,13 +160,13 @@ gulp.task('clean', function(done) {
 
 gulp.task('build', ['browser-build', 'docs']);
 
-gulp.task('docs', ['clean-docs'], function(done) {
+gulp.task('build-docs', ['clean-docs'], function(done) {
 	fs.readFile('./.jsdocrc', { encoding: 'utf8' }, function(err, configText) {
 		if (err) {
 			throw new Error(err);
 		}
 
-		var jsdocConfig = JSON.parse(configText);
+		const jsdocConfig = JSON.parse(configText);
 
 		jsdocConfig.opts = jsdocConfig.opts || {};
 		jsdocConfig.opts.destination = documentationDirectory;
@@ -191,3 +175,51 @@ gulp.task('docs', ['clean-docs'], function(done) {
 			pipe(jsdoc(jsdocConfig, done));
 	});
 });
+
+gulp.task('symlink-docs', function(done) {
+
+	fs.readdir(
+		currentVersionDocumentationDirectory,
+		{
+			encoding: "utf8"
+		},
+		function(err, files) {
+			if (err) {
+				done(err);
+				return;
+			}
+
+			let errored = false;
+
+			_.each(
+				files,
+				function(file) {
+					try {
+						let symlinkedFile = path.join(documentationDirectory, file);
+
+						try {
+							fs.unlinkSync(symlinkedFile);
+						}
+						catch(e) {}
+						
+						fs.symlinkSync(
+							path.join(currentVersionDocumentationDirectory, file),
+							symlinkedFile
+						);
+					}
+					catch(e) {
+						done(e);
+						errored = true;
+						return false;
+					}
+				}
+			);
+
+			if (!errored) {
+				done();
+			}
+		}
+	);
+});
+
+gulp.task('docs', ['build-docs', 'symlink-docs']);
