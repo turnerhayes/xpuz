@@ -39,6 +39,3 @@ node_modules
 
 # Generated scripts
 dist/
-
-# Generated documentation
-docs/
