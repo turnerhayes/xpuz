@@ -26,7 +26,7 @@ const stylish     = require('jshint-stylish');
 const IS_DEVELOPMENT = process.env.NODE_ENV ? process.env.NODE_ENV === 'development' : true;
 
 const documentationDirectory = path.join(__dirname, 'docs');
-const currentVersionDocumentationDirectory = path.join(documentationDirectory, 'xpuz', xpuzPackage.version);
+const currentVersionDocumentationDirectory = path.join(documentationDirectory, xpuzPackage.name, xpuzPackage.version);
 
 const buildDirectory = path.join(__dirname, 'dist');
 
