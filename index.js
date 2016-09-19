@@ -8,8 +8,10 @@
  */
 
 exports = module.exports = {
-	IPUZ: require('./parsers/ipuz'),
-	PUZ: require('./parsers/puz'),
-	JPZ: require('./parsers/jpz'),
+	Parsers: {
+		IPUZ: require('./parsers/ipuz'),
+		PUZ: require('./parsers/puz'),
+		JPZ: require('./parsers/jpz')
+	},
 	Puzzle: require('./lib/puzzle'),
 };

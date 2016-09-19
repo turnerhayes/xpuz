@@ -1,26 +1,27 @@
 "use strict";
 
-const _                    = require('lodash');
-const path                 = require('path');
-const fs                   = require('fs');
-const del                  = require('del');
-const xpuzPackage          = require('./package');
+const _           = require('lodash');
+const Q           = require('q');
+const path        = require('path');
+const fs          = require('fs');
+const del         = require('del');
+const xpuzPackage = require('./package');
 
-const gulp                 = require('gulp');
-const gulpIf               = require('gulp-if');
-const jshint               = require('gulp-jshint');
-const gutil                = require('gulp-util');
-const sourcemaps           = require('gulp-sourcemaps');
-const uglify               = require('gulp-uglify');
-const jsdoc                = require('gulp-jsdoc3');
+const gulp        = require('gulp');
+const gulpIf      = require('gulp-if');
+const jshint      = require('gulp-jshint');
+const gutil       = require('gulp-util');
+const sourcemaps  = require('gulp-sourcemaps');
+const uglify      = require('gulp-uglify');
+const jsdoc       = require('gulp-jsdoc3');
 
-const watchify             = require('watchify');
-const browserify           = require('browserify');
-const babelify             = require('babelify');
-const source               = require('vinyl-source-stream');
-const buffer               = require('vinyl-buffer');
-const merge                = require('merge-stream');
-const stylish              = require('jshint-stylish');
+const watchify    = require('watchify');
+const browserify  = require('browserify');
+const babelify    = require('babelify');
+const source      = require('vinyl-source-stream');
+const buffer      = require('vinyl-buffer');
+const merge       = require('merge-stream');
+const stylish     = require('jshint-stylish');
 
 const IS_DEVELOPMENT = process.env.NODE_ENV ? process.env.NODE_ENV === 'development' : true;
 
@@ -47,7 +48,125 @@ function _cleanBuild() {
 }
 
 function _cleanDocumentation() {
-	return del(path.join(currentVersionDocumentationDirectory, '*'));
+	return Q(del(path.join(currentVersionDocumentationDirectory, '*'))).
+		then(
+			function() {
+				const deferred = Q.defer();
+
+				fs.readdir(documentationDirectory, function(err, files) {
+					if (err) {
+						deferred.reject(err);
+						return;
+					}
+
+					let failed = false;
+
+					_.each(files, function(file) {
+						try {
+							const filePath = path.join(documentationDirectory, file);
+							const stat = fs.lstatSync(filePath);
+
+							if (stat.isSymbolicLink()) {
+								fs.unlinkSync(filePath);
+							}
+						}
+						catch(ex) {
+							deferred.reject(ex);
+							failed = true;
+							return false;
+						}
+					});
+
+					if (!failed) {
+						deferred.resolve();
+					}
+				});
+
+				return deferred.promise;
+			}
+		);
+}
+
+function _buildDocumentation() {
+	const deferred = Q.defer();
+
+	fs.readFile('./.jsdocrc', { encoding: 'utf8' }, function(err, configText) {
+		if (err) {
+			deferred.reject(err);
+			return;
+		}
+
+		const jsdocConfig = JSON.parse(configText);
+
+		jsdocConfig.opts = jsdocConfig.opts || {};
+		jsdocConfig.opts.destination = documentationDirectory;
+
+		gulp.src(jsFileBlobs, { read: false }).
+			pipe(
+				jsdoc(jsdocConfig, function(err) {
+					if (err) {
+						deferred.reject(err);
+						return;
+					}
+
+					deferred.resolve();
+				})
+			);
+	});
+
+	return deferred.promise;
+}
+
+function _setupDocumentationSymlinks() {
+	const deferred = Q.defer();
+
+	fs.readdir(
+		currentVersionDocumentationDirectory,
+		{
+			encoding: "utf8"
+		},
+		function(err, files) {
+			if (err) {
+				deferred.reject(err);
+				return;
+			}
+
+			let errored = false;
+
+			_.each(
+				files,
+				function(file) {
+					try {
+						let symlinkedFile = path.join(documentationDirectory, file);
+
+						try {
+							fs.unlinkSync(symlinkedFile);
+						}
+						catch(e) {}
+						
+						fs.symlinkSync(
+							path.relative(
+								documentationDirectory,
+								path.join(currentVersionDocumentationDirectory, file)
+							),
+							symlinkedFile
+						);
+					}
+					catch(e) {
+						deferred.reject(e);
+						errored = true;
+						return false;
+					}
+				}
+			);
+
+			if (!errored) {
+				deferred.resolve();
+			}
+		}
+	);
+
+	return deferred.promise;
 }
 
 function _changeEventToOperation(eventType) {
@@ -160,69 +279,10 @@ gulp.task('clean', function(done) {
 
 gulp.task('build', ['browser-build', 'docs']);
 
-gulp.task('build-docs', ['clean-docs'], function(done) {
-	fs.readFile('./.jsdocrc', { encoding: 'utf8' }, function(err, configText) {
-		if (err) {
-			throw new Error(err);
-		}
-
-		const jsdocConfig = JSON.parse(configText);
-
-		jsdocConfig.opts = jsdocConfig.opts || {};
-		jsdocConfig.opts.destination = documentationDirectory;
-
-		gulp.src(jsFileBlobs, { read: false }).
-			pipe(jsdoc(jsdocConfig, done));
-	});
+gulp.task('docs', function(done) {
+	_cleanDocumentation().then(_buildDocumentation).
+		then(_setupDocumentationSymlinks).done(
+			() => done(),
+			(err) => done(err)
+		);
 });
-
-gulp.task('symlink-docs', function(done) {
-
-	fs.readdir(
-		currentVersionDocumentationDirectory,
-		{
-			encoding: "utf8"
-		},
-		function(err, files) {
-			if (err) {
-				done(err);
-				return;
-			}
-
-			let errored = false;
-
-			_.each(
-				files,
-				function(file) {
-					try {
-						let symlinkedFile = path.join(documentationDirectory, file);
-
-						try {
-							fs.unlinkSync(symlinkedFile);
-						}
-						catch(e) {}
-						
-						fs.symlinkSync(
-							path.relative(
-								documentationDirectory,
-								path.join(currentVersionDocumentationDirectory, file)
-							),
-							symlinkedFile
-						);
-					}
-					catch(e) {
-						done(e);
-						errored = true;
-						return false;
-					}
-				}
-			);
-
-			if (!errored) {
-				done();
-			}
-		}
-	);
-});
-
-gulp.task('docs', ['build-docs', 'symlink-docs']);

@@ -1,5 +1,12 @@
 "use strict";
 
+/**
+ * PUZ file parser.
+ *
+ * @module xpuz/parsers/puz
+ * @see {@link module:xpuz/puzzle|Puzzle}
+ */
+
 var path         = require('path');
 var fs           = require('fs');
 var Q            = require('q');
@@ -7,6 +14,13 @@ var _            = require('lodash');
 var iconv        = require('iconv-lite');
 var PUZReader    = require('./puz/puz-reader');
 var Puzzle       = require('../lib/puzzle');
+
+
+/**
+ * Q promise class
+ * @external Q/Promise
+ * @see {@link https://github.com/kriskowal/q/wiki/API-Reference|Q}
+ */
 
 
 var BLOCK_CELL_VALUE = '.';
@@ -502,7 +516,6 @@ function _transposeGrid(gridString, width, height) {
 	).join('');
 }
 
-
 function _restoreSolution(s, t) {
 	/*
 	s is the source string, it can contain '.'
@@ -550,7 +563,7 @@ function _unscrambleString(str, key) {
 
 function _scrambleString(str, key) {
 	/*
-	s is the puzzle's solution in column-major order, omitting black squares:
+	str is the puzzle's solution in column-major order, omitting black squares:
 	i.e. if the puzzle is:
 		C A T
 		# # A
@@ -573,7 +586,6 @@ function _scrambleString(str, key) {
 
     return str;
 }
-
 
 function _shift(str, key) {
 	return _.map(
@@ -982,8 +994,22 @@ function _parsePuzzle(path, options) {
 	 return data;
 }
 
-/*
- * Parser class for PUZ-formatted puzzles
+function validatePuzzle(puzzle) {
+	var checksumResults = _validateChecksums(puzzle);
+
+	var errors = [];
+
+	if (checksumResults) {
+		errors = errors.concat(checksumResults);
+	}
+
+	return _.isEmpty(errors) ? undefined : errors;
+}
+
+/**
+ * Parser class for PUZ-formatted puzzles.
+ *
+ * @constructor
  */
 function PUZParser() {
 	if (!(this instanceof PUZParser)) {
@@ -992,39 +1018,63 @@ function PUZParser() {
 }
 
 
+/**
+ * Buffer object
+ * @external Buffer
+ * @see {@link https://nodejs.org/api/buffer.html|Buffer Node API}
+ */
+
 PUZParser.prototype = Object.create(Object.prototype, {
+	/**
+	 * Parses a file in .puz format into a {@link module:xpuz/puzzle~Puzzle|Puzzle} object.
+	 *
+	 * @memberOf module:xpuz/parsers/puz~PUZParser
+	 * @function
+	 * @instance
+	 *
+	 * @param {string|external:Buffer|ArrayBuffer} path - the .puz file to parse, either as a file path
+	 *	(strong) or a {@link external:Buffer|Buffer} or {@link external:ArrayBuffer|ArrayBuffer} containing the puzzle
+	 *	content.
+	 * @param {object} [options] - an object of options to affect the parsing
+	 * @param {Number} [options.solutionKey] - an integer between 1000 and 9999, inclusive, to use to unlock
+	 *	the puzzle's solution if the solution is locked. If the solution is not locked, this is ignored.
+	 *
+	 * @throws if the puzzle is locked and an invalid (or no) `options.solutionKey` was provided
+	 *
+	 * @returns {external:Q/Promise} a promise that resolves with the {@link module:xpuz/puzzle~Puzzle|Puzzle} object 
+	 */
 	parse: {
 		value: function parse(path, options) {
 			var parser = this;
+			var puzzleData, errors, puzzleDefinition;
 			var deferred = Q.defer();
 
 			options = options || {};
 
-			var puzzleData;
-
 			try {
 				puzzleData = _parsePuzzle(path, options);
 
-				var errors = parser.validatePuzzle(puzzleData);
+				errors = validatePuzzle(puzzleData);
 
 				if (!_.isUndefined(errors)) {
-					throw new Error('Invalid puzzle:\n\t' + errors.join('\n\t'));
+					deferred.reject('Invalid puzzle:\n\t' + errors.join('\n\t'));
 				}
+				else {
+					puzzleDefinition = {
+						title: puzzleData.title,
+						author: puzzleData.author,
+						copyright: puzzleData.copyright,
+						intro: puzzleData.notes || undefined,
+						grid: puzzleData.grid,
+						clues: puzzleData.clues,
+						userSolution: _unflattenSolution(puzzleData.solution, puzzleData.header.width),
+						extensions: {
+							timing: puzzleData.timing
+						}
+					};
 
-				var puzzleDefinition = {
-					title: puzzleData.title,
-					author: puzzleData.author,
-					copyright: puzzleData.copyright,
-					intro: puzzleData.notes || undefined,
-					grid: puzzleData.grid,
-					clues: puzzleData.clues,
-					userSolution: _unflattenSolution(puzzleData.solution, puzzleData.header.width),
-					extensions: {
-						timing: puzzleData.timing
-					}
-				};
-
-				deferred.resolve(new Puzzle(puzzleDefinition));
+					deferred.resolve(new Puzzle(puzzleDefinition));
+				}
 			}
 			catch(err) {
 				deferred.reject(err);
@@ -1034,6 +1084,25 @@ PUZParser.prototype = Object.create(Object.prototype, {
 		}
 	},
 
+	/**
+	 * Given a {@link module:xpuz/puzzle~Puzzle|Puzzle} object, returns a {@link external:Buffer|Buffer}
+	 * containing the puzzle in .puz format.
+	 *
+	 * @memberOf module:xpuz/parsers/puz~PUZParser
+	 * @function
+	 * @instance
+	 *
+	 * @param {module:xpuz/puzzle~Puzzle} puzzle - the puzzle to convert to .puz content.
+	 * @param {object} [options] - an object containing additional options for the conversion
+	 * @param {boolean} [options.scrambled] - if true, the puzzle's solution will be scrambled
+	 * @param {Number} [options.solutionKey] - the solution key with which to scramble the solution. 
+	 *	If `options.scrambled` is true, this is required.
+	 *
+	 * @throws if `options.scrambled` is true but `options.solutionKey` is not a 4-digit integer
+	 *	(between 1000 and 9999, inclusive).
+	 *
+	 * @returns {external:Buffer} a Buffer containing the .puz content. 
+	 */
 	generate: {
 		value: function generate(puzzle, options) {
 			var numberOfClues = _.size(puzzle.clues.across) + _.size(puzzle.clues.down);
@@ -1187,20 +1256,6 @@ PUZParser.prototype = Object.create(Object.prototype, {
 			}
 
 			return buffer;
-		}
-	},
-
-	validatePuzzle: {
-		value: function validatePuzzle(puzzle) {
-			var checksumResults = _validateChecksums(puzzle);
-
-			var errors = [];
-
-			if (checksumResults) {
-				errors = errors.concat(checksumResults);
-			}
-
-			return _.isEmpty(errors) ? undefined : errors;
 		}
 	}
 });

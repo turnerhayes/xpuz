@@ -6,5 +6,6 @@
 	"opts": {
 		"recurse": true,
 		"package": "./package.json"
-	}
+	},
+	"plugins": ["plugins/markdown"]
 }
