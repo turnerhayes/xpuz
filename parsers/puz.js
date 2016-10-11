@@ -370,6 +370,10 @@ function _pluckSolutions(grid) {
 						return BLOCK_CELL_VALUE;
 					}
 
+					if (_.isNull(cell.solution)) {
+						return ' ';
+					}
+
 					return cell.solution;
 				}
 			);
@@ -382,7 +386,7 @@ function _flattenSolution(solution) {
 		_.flatten(solution),
 		function(entry) {
 			if (_.isNull(entry)) {
-				return entry;
+				return BLOCK_CELL_VALUE;
 			}
 
 			if (entry === '') {
