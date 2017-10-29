@@ -1,0 +1,59 @@
+/**
+ * Global typedefs
+ *
+ * @namespace Types
+ */
+
+/**
+ * A single cell of a grid.
+ *
+ * @typedef {object} GridCell
+ * @memberof Types
+ *
+ * @property {boolean} [isBlockCell] - true if this is a block cell (a black cell that
+ *	doesn't contain any part of the solution).
+ * @property {Number} [cellNumber] - the clue number associated with this cell, if
+ *	any. If `isBlockCell` is true, this property is meaningless and should be absent.
+ * @property {object} [containingClues] - the clues that cover this cell. This should be
+ *	absent if `isBlockCell` is true.
+ * @property {Number} [containingClues.across] - the across clue, if any, that covers this cell.
+ * @property {Number} [containingClues.down] - the down clue, if any, that covers this cell.
+ * @property {string} [backgroundShape] - a string describing a shape, if any, that should be
+ *	displayed in the background of the cell (e.g. a circle). This should be absent if
+ *	`isBlockCell` is true.
+ */
+
+/**
+ * A single cell of a grid as an immutable Map. Contains the same structure as {@link Types.GridCell},
+ * but any collection is an Immutable collection.
+ *
+ * @typedef {external:Immutable.Map} ImmutableGridCell
+ * @memberof Types
+ *
+ * @property {boolean} [isBlockCell] - true if this is a block cell (a black cell that
+ *	doesn't contain any part of the solution).
+ * @property {Number} [cellNumber] - the clue number associated with this cell, if
+ *	any. If `isBlockCell` is true, this property is meaningless and should be absent.
+ * @property {Map} [containingClues] - the clues that cover this cell. This should be
+ *	absent if `isBlockCell` is true.
+ * @property {Number} [containingClues.across] - the across clue, if any, that covers this cell.
+ * @property {Number} [containingClues.down] - the down clue, if any, that covers this cell.
+ * @property {string} [backgroundShape] - a string describing a shape, if any, that should be
+ *	displayed in the background of the cell (e.g. a circle). This should be absent if
+ *	`isBlockCell` is true.
+ */
+
+/**
+ * A crossword grid.
+ *
+ * @typedef {Array<Types.GridCell[]>} Grid
+ * @memberof Types
+ */
+
+/**
+ * An immutable crossword grid.
+ *
+ * @typedef {external:Immutable.List<external:Immutable.List<Types.ImmutableGridCell>>} ImmutableGrid
+ * @memberof Types
+ */
+ 

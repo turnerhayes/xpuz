@@ -1,44 +1,41 @@
 /* globals describe, it */
 
-"use strict";
+const path       = require("path");
+const expect     = require("chai").expect;
+const IPUZParser = require("../src/parsers/ipuz");
+const Puzzle     = require("../src/lib/puzzle");
 
-var path = require('path');
-var expect = require('expect.js');
-var IPUZParser = require('../parsers/ipuz');
+const parser = new IPUZParser();
 
-var parser = new IPUZParser();
-
-describe('IPUZParser', function() {
-	it('should not throw an exception with a valid puzzle file', function() {
+describe("IPUZParser", function() {
+	it("should resolve the promise when given a valid puzzle file", function(done) {
 		parser.parse(
 			path.resolve(
 				__dirname,
-				'ipuz_files',
-				'high-tech-mergers.ipuz'
+				"ipuz_files",
+				"high-tech-mergers.ipuz"
 			)
-		).done(
-			function(puzzle) {
-				expect(true).to.be.ok();
-			},
-			function(err) {
-				expect().to.fail(err);
+		).then(
+			(puzzle) => {
+				expect(puzzle).to.be.an.instanceof(Puzzle);
+				done();
 			}
-		);
+		).catch(done);
 	});
 
-	it('should throw an exception with an invalid puzzle file', function() {
+	it("should reject the promise when given an invalid puzzle file", function(done) {
 		parser.parse(
 			path.resolve(
 				__dirname,
-				'ipuz_files',
-				'high-tech-mergers-smaller-dimensions.ipuz'
+				"ipuz_files",
+				"high-tech-mergers-smaller-dimensions.ipuz"
 			)
-		).done(
-			function(puzzle) {
-				expect().to.fail();
-			},
-			function(err) {
-				expect(true).to.be.ok();
+		).then(
+			() => done(new Error("Promise should have been rejected"))
+		).catch(
+			(err) => {
+				expect(err).to.not.be.undefined;
+				done();
 			}
 		);
 	});
