@@ -2,7 +2,7 @@
   "name": "xpuz",
   "version": "2.0.0",
   "description": "Parses and creates crossword puzzle files",
-  "main": "dist/xpuz.production.js",
+  "main": "src/index.js",
   "scripts": {
     "test": "mocha --compilers js:babel-core/register test",
     "build:prod": "NODE_ENV=production node ./scripts/build.js",
