@@ -52,12 +52,14 @@ function _addClue(obj, clue) {
 
 function _convertPuzzle(ipuz) {
 	const puzzle = new Puzzle({
-		title: ipuz.title,
-		author: ipuz.author,
-		copyright: ipuz.copyright,
-		publisher: ipuz.publisher,
-		difficulty: ipuz.difficulty,
-		intro: ipuz.intro,
+		info: {
+			title: ipuz.title,
+			author: ipuz.author,
+			copyright: ipuz.copyright,
+			publisher: ipuz.publisher,
+			difficulty: ipuz.difficulty,
+			intro: ipuz.intro,
+		},
 		grid: ipuz.puzzle.map(
 			(row) => row.map(
 				(cell) => {

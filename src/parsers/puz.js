@@ -1001,10 +1001,12 @@ function _getPuzzleData(path, options) {
 				}
 				else {
 					resolve({
-						title: puzzleData.title || undefined,
-						author: puzzleData.author || undefined,
-						copyright: puzzleData.copyright || undefined,
-						intro: puzzleData.notes || undefined,
+						info: {
+							title: puzzleData.title || undefined,
+							author: puzzleData.author || undefined,
+							copyright: puzzleData.copyright || undefined,
+							intro: puzzleData.notes || undefined,
+						},
 						grid: puzzleData.grid,
 						clues: puzzleData.clues,
 						userSolution: _unflattenSolution(puzzleData.solution, puzzleData.header.width),

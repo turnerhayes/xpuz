@@ -17,11 +17,7 @@ const infoSchema = {
 	intro: "",
 };
 
-/// DEBUG
-global.__Immutable = require("immutable");
-
-class PuzzleInfo extends Record(infoSchema, "PuzzleInfo") {
-}
+class PuzzleInfo extends Record(infoSchema, "PuzzleInfo") {}
 
 const schema = {
 	grid: List(),
