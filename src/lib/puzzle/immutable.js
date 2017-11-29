@@ -6,7 +6,7 @@ const {
 	Collection,
 	fromJS
 }                 = require("immutable");
-const PuzzleMixin = require("./puzzle-mixin");
+const PuzzleMixin = require("../puzzle-mixin");
 
 const infoSchema = {
 	title: "",

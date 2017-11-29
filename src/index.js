@@ -7,7 +7,7 @@
  */
 
 const Puzzle = require("./lib/puzzle");
-const ImmutablePuzzle = require("./lib/immutable-puzzle");
+const ImmutablePuzzle = require("./lib/puzzle/immutable");
 
 exports = module.exports = {
 	/**

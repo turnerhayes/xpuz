@@ -21,7 +21,7 @@ const size            = require("lodash/size");
 const iconv           = require("iconv-lite");
 const PUZReader       = require("./puz/puz-reader");
 const Puzzle          = require("../lib/puzzle");
-const ImmutablePuzzle = require("../lib/immutable-puzzle");
+const ImmutablePuzzle = require("../lib/puzzle/immutable");
 
 
 const BLOCK_CELL_VALUE = ".";

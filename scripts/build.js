@@ -13,18 +13,14 @@ const debug = require("debug")("xpuz:build");
 require("babel-core/register"); // needed to properly require ../src/index below
 const index = require("../src/index");
 
-const environment = process.env.NODE_ENV || "development";
-
 const SOURCE_DIR = path.resolve(__dirname, "..", "src");
 const OUTPUT_DIR = path.resolve(__dirname, "..", "dist");
 const ENTRY_FILE = path.join(SOURCE_DIR, "index.js");
-const OUTPUT_FILE = path.join(OUTPUT_DIR, `xpuz.${environment}.js`);
+const OUTPUT_FILE = path.join(OUTPUT_DIR, `xpuz.js`);
 
-const SOURCE_MAP_PATH = path.join(OUTPUT_DIR, `xpuz.${environment}.js.map`);
+const SOURCE_MAP_PATH = path.join(OUTPUT_DIR, `xpuz.js.map`);
 
-const IS_DEVELOPMENT = environment !== "production";
-
-debug("Bundling entry point %s", ENTRY_FILE);
+debug("Bundling entry point %s for production build", ENTRY_FILE);
 
 mkdirp(OUTPUT_DIR).then(
 	() => debug("Created output directory %s", OUTPUT_DIR)
@@ -42,34 +38,21 @@ mkdirp(OUTPUT_DIR).then(
 ).then(
 	() => new Promise(
 		(resolve, reject) => {
-			if (IS_DEVELOPMENT) {
-				debug("Building in development mode");
-			}
-
-			let bundler = browserify(
+			const bundler = browserify(
 				ENTRY_FILE,
 				{
 					standalone: "XPuz",
-					debug: IS_DEVELOPMENT,
+					debug: true,
 					basedir: SOURCE_DIR,
 					bundleExternal: false,
 				}
 			).transform(
-				babelify.configure({ comments: IS_DEVELOPMENT, sourceRoot: SOURCE_DIR })
-			);
+				babelify.configure({ comments: false, sourceRoot: SOURCE_DIR })
+			).transform("uglifyify", { global: true });
 
-			if (!IS_DEVELOPMENT) {
-				debug("Uglifying bundle");
-				bundler = bundler.transform("uglifyify", { global: true });
-			}
-
-			let stream = bundler.bundle();
-
-			if (IS_DEVELOPMENT) {
-				stream = stream.pipe(exorcist(SOURCE_MAP_PATH, null, null, SOURCE_DIR, true));
-			}
-
-			stream = stream.pipe(fs.createWriteStream(OUTPUT_FILE), "utf8");
+			const stream = bundler.bundle()
+				.pipe(exorcist(SOURCE_MAP_PATH, null, null, SOURCE_DIR, true))
+				.pipe(fs.createWriteStream(OUTPUT_FILE), "utf8");
 
 			stream.on("finish", () => resolve());
 

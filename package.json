@@ -5,9 +5,7 @@
   "main": "lib/index.js",
   "scripts": {
     "test": "mocha --compilers js:babel-core/register test",
-    "build:prod": "NODE_ENV=production node ./scripts/build.js",
-    "build:dev": "NODE_ENV=development node ./scripts/build.js",
-    "build": "npm run build:prod && npm run build:dev",
+    "build": "NODE_ENV=production node ./scripts/build.js",
     "compile": "rm -rf lib; babel -s true -d lib src",
     "watch": "rm -rf dist; mkdir dist; watchify --debug --verbose --standalone XPuz -o dist/xpuz.js -g uglifyify -t babelify src/index.js",
     "docs": "rm -rf docs; jsdoc -R README.md -p --package ./package.json -c ./.jsdoc.config.json -t ./node_modules/ink-docstrap/template -r -d docs",

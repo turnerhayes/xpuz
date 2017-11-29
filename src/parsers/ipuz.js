@@ -4,16 +4,17 @@
  * @module xpuz/parsers/ipuz
  */
 
-const Promise  = require("bluebird");
-const fs       = require("fs");
+const Promise         = require("bluebird");
+const fs              = require("fs");
 // fs is stubbed out for browser builds
-const readFile = fs.readFile ? Promise.promisify(fs.readFile) : () => {};
-const max      = require("lodash/max");
-const get      = require("lodash/get");
-const isObject = require("lodash/isObject");
-const isString = require("lodash/isString");
-const reduce   = require("lodash/reduce");
-const Puzzle   = require("../lib/puzzle");
+const readFile        = fs.readFile ? Promise.promisify(fs.readFile) : () => {};
+const max             = require("lodash/max");
+const get             = require("lodash/get");
+const isObject        = require("lodash/isObject");
+const isString        = require("lodash/isString");
+const reduce          = require("lodash/reduce");
+const Puzzle          = require("../lib/puzzle");
+const ImmutablePuzzle = require("../lib/puzzle/immutable");
 
 const BLOCK_VALUE = "#";
 
@@ -50,8 +51,8 @@ function _addClue(obj, clue) {
 	return obj;
 }
 
-function _convertPuzzle(ipuz) {
-	const puzzle = new Puzzle({
+function _convertPuzzle(ipuz, immutable = false) {
+	const puzzle = new (immutable ? ImmutablePuzzle : Puzzle)({
 		info: {
 			title: ipuz.title,
 			author: ipuz.author,
@@ -108,6 +109,44 @@ function _validatePuzzle(puzzle) {
 	return errors.length === 0 ? undefined : errors;
 }
 
+function _parsePuzzle(puzzle, immutable) {
+	let promise;
+
+	return new Promise(
+		(resolve, reject) => {
+			if (isString(puzzle)) {
+				// path to puzzle
+				return readFile(puzzle).then(
+					(fileContent) => JSON.parse(fileContent.toString())
+				).then(
+					(content) => resolve(content)
+				).catch(
+					(ex) => {
+						reject(new Error(`Unable to read IPUZ puzzle from file ${puzzle}: ${ex.message}`));
+					}
+				);
+			}
+			else if (isObject(puzzle)) {
+				resolve(puzzle);
+				return puzzle;
+			}
+			else {
+				return reject(new Error("parse() expects either a path string or an object"));
+			}
+		}
+	).then(
+		(puzzle) => {
+			const errors = _validatePuzzle(puzzle);
+
+			if (errors !== undefined) {
+				throw new Error(`Invalid puzzle:\n\t${errors.join("\n\t")}`);
+			}
+
+			return _convertPuzzle(puzzle, immutable);
+		}
+	);
+}
+
 /**
  * Parser class for IPUZ-formatted puzzles
  */
@@ -121,36 +160,11 @@ class IPUZParser {
 	 * @returns {module:xpuz/puzzle~Puzzle} the parsed {@link module:xpuz/puzzle~Puzzle|Puzzle} object
 	 */
 	parse(puzzle) {
-		let promise;
+		return _parsePuzzle(puzzle);
+	}
 
-		if (isString(puzzle)) {
-			// path to puzzle
-			promise = readFile(puzzle).then(
-				(fileContent) => JSON.parse(fileContent.toString())
-			).catch(
-				(ex) => {
-					throw new Error(`Unable to read IPUZ puzzle from file ${puzzle}: ${ex.message}`);
-				}
-			);
-		}
-		else if (isObject(puzzle)) {
-			promise = Promise.resolve(puzzle);
-		}
-		else {
-			return Promise.reject(new Error("parse() expects either a path string or an object"));
-		}
-
-		return promise.then(
-			(puzzle) => {
-				const errors = _validatePuzzle(puzzle);
-
-				if (errors !== undefined) {
-					throw new Error(`Invalid puzzle:\n\t${errors.join("\n\t")}`);
-				}
-
-				return _convertPuzzle(puzzle);
-			}
-		);
+	parseImmutable(puzzle) {
+		return _parsePuzzle(puzzle, true);
 	}
 }
 
