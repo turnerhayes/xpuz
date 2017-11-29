@@ -61,7 +61,7 @@ class ImmutablePuzzle extends Record(schema, "ImmutablePuzzle") {
 			info = new PuzzleInfo(info);
 		}
 
-		grid = ImmutablePuzzle.processGrid(grid ? fromJS(grid) : List());
+		grid = grid ? ImmutablePuzzle.processGrid(fromJS(grid)) : List();
 
 		const args = {
 			info,

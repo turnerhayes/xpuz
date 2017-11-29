@@ -64,7 +64,6 @@ exports = module.exports = {
 };
 
 },{"./lib/immutable-puzzle":2,"./lib/puzzle":4,"./parsers/ipuz":5,"./parsers/jpz":6,"./parsers/puz":7}],2:[function(require,module,exports){
-(function (global){
 "use strict";
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
@@ -91,9 +90,6 @@ var infoSchema = {
 	difficulty: "",
 	intro: ""
 };
-
-/// DEBUG
-global.__Immutable = require("immutable");
 
 var PuzzleInfo = function (_Record) {
 	_inherits(PuzzleInfo, _Record);
@@ -154,7 +150,7 @@ var ImmutablePuzzle = function (_Record2) {
 			info = new PuzzleInfo(info);
 		}
 
-		grid = ImmutablePuzzle.processGrid(grid ? fromJS(grid) : List());
+		grid = grid ? ImmutablePuzzle.processGrid(fromJS(grid)) : List();
 
 		var args = {
 			info: info,
@@ -211,8 +207,6 @@ ImmutablePuzzle.processGrid = function processGrid(grid) {
 };
 
 exports = module.exports = ImmutablePuzzle;
-
-}).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
 
 },{"./puzzle-mixin":3,"immutable":undefined}],3:[function(require,module,exports){
 "use strict";
@@ -776,12 +770,14 @@ function _addClue(obj, clue) {
 
 function _convertPuzzle(ipuz) {
 	var puzzle = new Puzzle({
-		title: ipuz.title,
-		author: ipuz.author,
-		copyright: ipuz.copyright,
-		publisher: ipuz.publisher,
-		difficulty: ipuz.difficulty,
-		intro: ipuz.intro,
+		info: {
+			title: ipuz.title,
+			author: ipuz.author,
+			copyright: ipuz.copyright,
+			publisher: ipuz.publisher,
+			difficulty: ipuz.difficulty,
+			intro: ipuz.intro
+		},
 		grid: ipuz.puzzle.map(function (row) {
 			return row.map(function (cell) {
 				if (cell === BLOCK_VALUE) {
@@ -1777,10 +1773,12 @@ function _getPuzzleData(path, options) {
 				reject("Invalid puzzle:\n\t" + errors.join("\n\t"));
 			} else {
 				resolve({
-					title: puzzleData.title || undefined,
-					author: puzzleData.author || undefined,
-					copyright: puzzleData.copyright || undefined,
-					intro: puzzleData.notes || undefined,
+					info: {
+						title: puzzleData.title || undefined,
+						author: puzzleData.author || undefined,
+						copyright: puzzleData.copyright || undefined,
+						intro: puzzleData.notes || undefined
+					},
 					grid: puzzleData.grid,
 					clues: puzzleData.clues,
 					userSolution: _unflattenSolution(puzzleData.solution, puzzleData.header.width),
