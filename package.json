@@ -5,9 +5,10 @@
   "main": "lib/index.js",
   "scripts": {
     "test": "mocha --compilers js:babel-core/register test",
+    "prepublish": "npm run compile && npm run build",
     "build": "NODE_ENV=production node ./scripts/build.js",
     "compile": "rm -rf lib; babel -s true -d lib src",
-    "watch": "rm -rf dist; mkdir dist; watchify --debug --verbose --standalone XPuz -o dist/xpuz.js -g uglifyify -t babelify src/index.js",
+    "watch": "rm -rf lib; babel --watch -s true -d lib src",
     "docs": "rm -rf docs; jsdoc -R README.md -p --package ./package.json -c ./.jsdoc.config.json -t ./node_modules/ink-docstrap/template -r -d docs",
     "docs:watch": "chokidar \"**/*.jsdoc\" \"src/**/*.js\" --verbose -i node_modules -i docs -i dist -c \"npm run docs\"",
     "lint": "eslint src"

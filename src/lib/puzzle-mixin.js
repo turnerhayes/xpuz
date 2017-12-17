@@ -74,7 +74,7 @@ function PuzzleMixin({ constructor, equalityTest, getter = get, setter = set, si
 				containingClues.across = clueNumber;
 			}
 			else {
-				for (let i = columnIndex; i >= 0; i--) {
+				for (let i = columnIndex - 1; i >= 0; i--) {
 					if (getter(grid, [rowIndex, i, "isBlockCell"])) {
 						break;
 					}
@@ -316,6 +316,8 @@ function PuzzleMixin({ constructor, equalityTest, getter = get, setter = set, si
 					for (let rowIndex = 0; rowIndex < height; rowIndex++) {
 						for (let columnIndex = 0; columnIndex < width; columnIndex++) {
 							if (getter(grid, [rowIndex, columnIndex, "isBlockCell"])) {
+								setter(grid, [rowIndex, columnIndex, "clueNumber"], undefined);
+								setter(grid, [rowIndex, columnIndex, "containingClues"], undefined);
 								continue;
 							}
 
