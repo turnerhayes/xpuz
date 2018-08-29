@@ -1,0 +1,20 @@
+{
+	"tags": {
+		"allowUnknownTags": true
+	},
+	"source": {
+		"include": ["src"],
+		"includePattern": ".+\\.js(doc)?$",
+		"excludePattern": "((^|\\/|\\\\)_)|(\\/node_modules\\/)"
+	},
+	"plugins": [
+		"plugins/markdown"
+	],
+	"templates": {
+		"default": {
+			"outputSourceFiles": true
+		},
+		"monospaceLinks": true,
+		"cleverLinks": true
+	}
+}

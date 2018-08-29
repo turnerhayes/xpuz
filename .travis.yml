@@ -1,0 +1,16 @@
+language: node_js
+notifications:
+  email:
+    on_failure: always
+    on_success: never
+addons:
+  apt:
+    sources:
+    - ubuntu-toolchain-r-test
+    packages:
+    - g++-4.8
+env:
+  CXX=g++-4.8
+cache:
+  directories:
+    node_modules

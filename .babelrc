@@ -1,0 +1,27 @@
+{
+	"plugins": [
+		"transform-undefined-to-void"
+	],
+	"presets": [
+		[
+			"env",
+			{
+				"modules": false
+			}
+		],
+		"stage-0"
+	],
+	"env": {
+		"production": {
+			"only": [
+				"src"
+			],
+		},
+		"test": {
+			"plugins": [
+				"transform-es2015-modules-commonjs",
+				"dynamic-import-node"
+			]
+		}
+	}
+}

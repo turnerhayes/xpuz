@@ -1,0 +1,56 @@
+/**
+ * Bluebird promise class
+ * @external Bluebird
+ * @see {@link http://bluebirdjs.com/docs/api-reference.html}
+ */
+
+/**
+ * Buffer object
+ * @external Buffer
+ * @see {@link https://nodejs.org/api/buffer.html|Buffer Node API}
+ */
+
+/**
+ * Immutable.js
+ *
+ * @namespace Immutable
+ * @external
+ *
+ * @see {@link https://facebook.github.io/immutable-js/docs/}
+ */
+
+/**
+ * Immutable Map
+ *
+ * @class Map
+ * @memberof external:Immutable
+ *
+ * @see {@link https://facebook.github.io/immutable-js/docs/#/Map}
+ */
+
+/**
+ * Immutable List
+ *
+ * @class List
+ * @memberof external:Immutable
+ *
+ * @see {@link https://facebook.github.io/immutable-js/docs/#/List}
+ */
+
+/**
+ * Immutable Record
+ *
+ * Note that classes don't actually extend this, but rather extend the class
+ * returned by calling `Record()`, e.g.:
+ *
+ *```
+ * class MyRecord extends Record({ prop1: "", prop2: 2 }, "MyRecord") {}
+ *```
+ *
+ * See Immutable.js Record documentation for more information.
+ *
+ * @class Record
+ * @memberof external:Immutable
+ *
+ * @see {@link https://facebook.github.io/immutable-js/docs/#/Record}
+ */
