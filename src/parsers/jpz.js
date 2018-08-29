@@ -11,17 +11,16 @@ const Promise         = require("bluebird");
 const fs              = require("fs");
 // fs is stubbed out for browser builds
 const readFile        = fs.readFile ? Promise.promisify(fs.readFile) : () => {};
-const Puzzle          = require("../lib/puzzle");
-const ImmutablePuzzle = require("../lib/puzzle/immutable");
+const Puzzle          = require("../puzzle");
 
 
-function _parsePuzzle(puzzle, immutable) {
+function _parsePuzzle(puzzle) {
 	return new Promise(
 		(resolve, reject) => {
 			if (isString(puzzle)) {
 				// path to puzzle
 				return readFile(puzzle).then(
-					(fileContent) => resolve(new (immutable ? ImmutablePuzzle : Puzzle)(fileContent.toString()))
+					(fileContent) => resolve(new Puzzle(fileContent.toString()))
 				).catch(
 					(ex) => {
 						reject(new Error("Unable to read JPZ puzzle from file " +
@@ -30,7 +29,7 @@ function _parsePuzzle(puzzle, immutable) {
 				);
 			}
 			else if (isObject(puzzle)) {
-				return resolve(new (immutable ? ImmutablePuzzle : Puzzle)(puzzle));
+				return resolve(new Puzzle(puzzle));
 			}
 			else {
 				return reject(new Error("parse() expects either a path string or an object"));
@@ -54,10 +53,6 @@ class JPZParser {
 	 */
 	parse(puzzle) {
 		return _parsePuzzle(puzzle);
-	}
-
-	parseImmutable(puzzle) {
-		return _parsePuzzle(puzzle, immutable);
 	}
 }
 

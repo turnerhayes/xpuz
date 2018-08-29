@@ -6,12 +6,11 @@ const {
 }                     = require("immutable");
 const expect          = require("chai").expect;
 const {
-	Puzzle,
-	ImmutablePuzzle,
-	convertPuzzleToImmutablePuzzle
-}                     = require("../src/index");
+	Puzzle
+}                     = require("../src");
+const ImmutablePuzzle = require("../src/immutable").Puzzle;
+const Utils           = require("../src/immutable").Utils;
 
-/* eslint-disable no-magic-numbers */
 const PUZZLE_DEFINITION = {
 	grid: [
 		[{ isBlockCell: true }, { }, { },],
@@ -19,7 +18,6 @@ const PUZZLE_DEFINITION = {
 		[{ }, { }, { isBlockCell: true },],
 	],
 };
-/* eslint-enable no-magic-numbers */
 
 function _createPuzzle() {
 	return new Puzzle(JSON.parse(JSON.stringify(PUZZLE_DEFINITION)));
@@ -29,7 +27,7 @@ describe("ImmutablePuzzle object", function() {
 	it("should convert a Puzzle to an ImmutablePuzzle", function() {
 		const puzzle = _createPuzzle();
 
-		const immutablePuzzle = convertPuzzleToImmutablePuzzle(puzzle);
+		const immutablePuzzle = Utils.toImmutable(puzzle);
 
 		expect(immutablePuzzle, "Immutable puzzle").to.be.an.instanceof(ImmutablePuzzle);
 		expect(immutablePuzzle.grid.size, "Immutable grid height").to.equal(puzzle.grid.length);
@@ -37,7 +35,7 @@ describe("ImmutablePuzzle object", function() {
 	});
 
 	it("should return the correct toString value", function() {
-		const immutablePuzzle = convertPuzzleToImmutablePuzzle(_createPuzzle());
+		const immutablePuzzle = Utils.toImmutable(_createPuzzle());
 
 		expect(immutablePuzzle.toString()).to.equal("ImmutablePuzzle");
 	});
@@ -45,16 +43,16 @@ describe("ImmutablePuzzle object", function() {
 	it("should return the same toJSON value as the mutable Puzzle", function() {
 		const puzzle = _createPuzzle();
 
-		const immutablePuzzle = convertPuzzleToImmutablePuzzle(puzzle);
+		const immutablePuzzle = Utils.toImmutable(puzzle);
 
 		expect(immutablePuzzle.toJSON()).to.deep.equal(puzzle.toJSON());
 	});
 
 	it("should correctly determine equality", function() {
-		const puzzle = convertPuzzleToImmutablePuzzle(_createPuzzle());
+		const puzzle = Utils.toImmutable(_createPuzzle());
 
 		const mutablePuzzle = _createPuzzle();
-		let otherPuzzle = convertPuzzleToImmutablePuzzle(mutablePuzzle);
+		let otherPuzzle = Utils.toImmutable(mutablePuzzle);
 
 		expect(puzzle).to.be.an.instanceof(ImmutablePuzzle);
 		expect(puzzle.equals(otherPuzzle), "Compare against equivalent puzzle").to.be.true;
@@ -68,9 +66,9 @@ describe("ImmutablePuzzle object", function() {
 	});
 
 	it("should return a consistent hashCode", function() {
-		const puzzle = convertPuzzleToImmutablePuzzle(_createPuzzle());
+		const puzzle = Utils.toImmutable(_createPuzzle());
 
-		const otherPuzzle = convertPuzzleToImmutablePuzzle(_createPuzzle());
+		const otherPuzzle = Utils.toImmutable(_createPuzzle());
 
 		expect(puzzle).to.be.an.instanceof(ImmutablePuzzle);
 		expect(puzzle.hashCode(), "Returns the same hash code on subsequent calls").to.equal(puzzle.hashCode());
@@ -78,7 +76,7 @@ describe("ImmutablePuzzle object", function() {
 	});
 
 	it("should place clue numbers and containing clues in the appropriate cells", function() {
-		const puzzle = convertPuzzleToImmutablePuzzle(_createPuzzle());
+		const puzzle = Utils.toImmutable(_createPuzzle());
 
 		/* eslint-disable no-magic-numbers */
 		[
@@ -156,7 +154,7 @@ describe("ImmutablePuzzle object", function() {
 	});
 
 	it("should update clue numbers and containing clues when the grid is changed", function() {
-		let puzzle = convertPuzzleToImmutablePuzzle(_createPuzzle());
+		let puzzle = Utils.toImmutable(_createPuzzle());
 
 		/* eslint-disable no-magic-numbers */
 		const originalLayout = [

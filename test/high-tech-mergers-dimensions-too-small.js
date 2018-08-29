@@ -3,7 +3,7 @@
 const path       = require("path");
 const expect     = require("chai").expect;
 const IPUZParser = require("../src/parsers/ipuz");
-const Puzzle     = require("../src/lib/puzzle");
+const Puzzle     = require("../src/puzzle");
 
 const parser = new IPUZParser();
 

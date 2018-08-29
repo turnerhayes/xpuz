@@ -1,8 +1,8 @@
 /* globals describe, it */
 
 const expect        = require("chai").expect;
-const Puzzle        = require("../src/lib/puzzle");
-const PuzzleBuilder = require("../src/lib/puzzle-builder");
+const Puzzle        = require("../src/puzzle");
+const PuzzleBuilder = require("../src/puzzle-builder");
 
 describe("PuzzleBuilder", function() {
 	it("should return a 3x3 Puzzle with a diagonal block", function() {
@@ -24,8 +24,10 @@ describe("PuzzleBuilder", function() {
 			build();
 
 		expect(puzzle).to.be.an.instanceof(Puzzle);
+		// eslint-disable-next-line no-magic-numbers
 		expect(puzzle.grid.length).to.equal(3);
 		puzzle.grid.forEach(
+			// eslint-disable-next-line no-magic-numbers
 			(row) => expect(row.length).to.equal(3)
 		);
 		expect(puzzle.grid[0][0].isBlockCell).to.equal(true);

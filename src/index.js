@@ -6,17 +6,16 @@
  * @memberof xpuz
  */
 
-const Puzzle = require("./lib/puzzle");
-const ImmutablePuzzle = require("./lib/puzzle/immutable");
+const Puzzle = require("./puzzle");
 
 exports = module.exports = {
 	/**
 	 * Puzzle file parser constructors
 	 *
 	 * @type object
-	 * @property {function} IPUZ - .ipuz file parser
-	 * @property {function} PUZ - .puz file parser
-	 * @property {function} JPZ - .jpz file parser
+	 * @property {xpuz/Parsers/ipuz} IPUZ - .ipuz file parser
+	 * @property {xpuz/Parsers/puz} PUZ - .puz file parser
+	 * @property {xpuz/Parsers/jpz} JPZ - .jpz file parser
 	 */
 	Parsers: {
 		IPUZ: require("./parsers/ipuz"),
@@ -31,32 +30,4 @@ exports = module.exports = {
 	 * @see {@link xpuz.Puzzle}
 	 */
 	Puzzle,
-
-	/**
-	 * ImmutablePuzzle object constructor
-	 *
-	 * @type function
-	 * @see {@link xpuz.ImmutablePuzzle}
-	 */
-	ImmutablePuzzle,
-
-	convertPuzzleToImmutablePuzzle(puzzle) {
-		return new ImmutablePuzzle({
-			grid: puzzle.grid,
-			clues: puzzle.clues,
-			userSolution: puzzle.userSolution,
-			info: puzzle.info,
-			extensions: puzzle.extensions,
-		});
-	},
-
-	convertImmutablePuzzleToPuzzle(immutablePuzzle) {
-		return new Puzzle({
-			grid: immutablePuzzle.grid.toJS(),
-			clues: immutablePuzzle.clues.toJS(),
-			userSolution: immutablePuzzle.userSolution.toJS(),
-			info: immutablePuzzle.info.toJS(),
-			extensions: immutablePuzzle.extensions.toJS(),
-		});
-	},
 };

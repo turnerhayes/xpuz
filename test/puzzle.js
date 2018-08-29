@@ -1,7 +1,9 @@
 /* globals describe, it */
 
 const expect = require("chai").expect;
-const Puzzle = require("../src/lib/puzzle");
+const {
+	Puzzle
+}            = require("../src");
 
 const PUZZLE_DEFINITION = {
 	grid: [

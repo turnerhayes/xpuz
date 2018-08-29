@@ -13,8 +13,7 @@ const get             = require("lodash/get");
 const isObject        = require("lodash/isObject");
 const isString        = require("lodash/isString");
 const reduce          = require("lodash/reduce");
-const Puzzle          = require("../lib/puzzle");
-const ImmutablePuzzle = require("../lib/puzzle/immutable");
+const Puzzle          = require("../puzzle");
 
 const BLOCK_VALUE = "#";
 
@@ -51,8 +50,8 @@ function _addClue(obj, clue) {
 	return obj;
 }
 
-function _convertPuzzle(ipuz, immutable = false) {
-	const puzzle = new (immutable ? ImmutablePuzzle : Puzzle)({
+function _convertPuzzle(ipuz) {
+	const puzzle = new Puzzle({
 		info: {
 			title: ipuz.title,
 			author: ipuz.author,
@@ -109,9 +108,7 @@ function _validatePuzzle(puzzle) {
 	return errors.length === 0 ? undefined : errors;
 }
 
-function _parsePuzzle(puzzle, immutable) {
-	let promise;
-
+function _parsePuzzle(puzzle) {
 	return new Promise(
 		(resolve, reject) => {
 			if (isString(puzzle)) {
@@ -142,7 +139,7 @@ function _parsePuzzle(puzzle, immutable) {
 				throw new Error(`Invalid puzzle:\n\t${errors.join("\n\t")}`);
 			}
 
-			return _convertPuzzle(puzzle, immutable);
+			return _convertPuzzle(puzzle);
 		}
 	);
 }
@@ -161,10 +158,6 @@ class IPUZParser {
 	 */
 	parse(puzzle) {
 		return _parsePuzzle(puzzle);
-	}
-
-	parseImmutable(puzzle) {
-		return _parsePuzzle(puzzle, true);
 	}
 }
 

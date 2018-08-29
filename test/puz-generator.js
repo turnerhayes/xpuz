@@ -1,14 +1,15 @@
 /* globals describe, it */
 
-const _         = require("lodash");
 const Promise   = require("bluebird");
 const writeFile = Promise.promisify(require("fs").writeFile);
 const tempOpen  = Promise.promisify(require("temp").track().open);
 const expect    = require("chai").expect;
-const PUZParser = require("../src/parsers/puz");
-const Puzzle    = require("../src/lib/puzzle");
+const {
+	Puzzle,
+	Parsers,
+}               = require("../src");
 
-const parser = new PUZParser();
+const parser = new Parsers.PUZ();
 
 function getPuzzleArgs(rebus) {
 	return {

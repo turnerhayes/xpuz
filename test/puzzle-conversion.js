@@ -3,10 +3,10 @@
 const expect          = require("chai").expect;
 const {
 	Puzzle,
-	ImmutablePuzzle,
-	convertPuzzleToImmutablePuzzle,
-	convertImmutablePuzzleToPuzzle
-}                     = require("../src/index");
+}                     = require("../src");
+
+const ImmutablePuzzle = require("../src/immutable").Puzzle;
+const ImmutablePuzzleUtils = require("../src/immutable").Utils;
 
 /* eslint-disable no-magic-numbers */
 const PUZZLE_DEFINITION = {
@@ -27,11 +27,11 @@ function createImmutablePuzzle() {
 }
 
 describe("Puzzle/ImmutablePuzzle conversion", function() {
-	describe("convertPuzzleToImmutablePuzzle", function() {
+	describe("toImmutable", function() {
 		it("should output an equivalent ImmutablePuzzle", function() {
 			const puzzle = createPuzzle();
 
-			const immutablePuzzle = convertPuzzleToImmutablePuzzle(puzzle);
+			const immutablePuzzle = ImmutablePuzzleUtils.toImmutable(puzzle);
 
 			expect(immutablePuzzle).to.be.an.instanceof(ImmutablePuzzle);
 			["grid", "clues", "userSolution", "extensions"].forEach(
@@ -40,11 +40,11 @@ describe("Puzzle/ImmutablePuzzle conversion", function() {
 		});
 	});
 
-	describe("convertImmutablePuzzleToPuzzle", function() {
+	describe("toMutable", function() {
 		it("should output an equivalent Puzzle", function() {
 			const immutablePuzzle = createImmutablePuzzle();
 
-			const puzzle = convertImmutablePuzzleToPuzzle(immutablePuzzle);
+			const puzzle = ImmutablePuzzleUtils.toMutable(immutablePuzzle);
 
 			expect(puzzle).to.be.an.instanceof(Puzzle);
 			["grid", "clues", "userSolution", "extensions"].forEach(

@@ -20,8 +20,7 @@ const compact         = require("lodash/compact");
 const size            = require("lodash/size");
 const iconv           = require("iconv-lite");
 const PUZReader       = require("./puz/puz-reader");
-const Puzzle          = require("../lib/puzzle");
-const ImmutablePuzzle = require("../lib/puzzle/immutable");
+const Puzzle          = require("../puzzle");
 
 
 const BLOCK_CELL_VALUE = ".";
@@ -1055,14 +1054,6 @@ class PUZParser {
 		);
 	}
 
-	parseImmutable(path, options) {
-		options = options || {};
-
-		return _getPuzzleData(path, options).then(
-			(puzzleData) => new ImmutablePuzzle(puzzleData)
-		);
-	}
-
 	/**
 	 * Given a {@link module:xpuz/puzzle~Puzzle|Puzzle} object, returns a {@link external:Buffer|Buffer}
 	 * containing the puzzle in .puz format.
@@ -1071,7 +1062,7 @@ class PUZParser {
 	 * @function
 	 * @instance
 	 *
-	 * @param {module:xpuz/puzzle~Puzzle|XPuz.ImmutablePuzzle} puzzle - the puzzle to convert to .puz content.
+	 * @param {module:xpuz/puzzle~Puzzle} puzzle - the puzzle to convert to .puz content.
 	 * @param {object} [options] - an object containing additional options for the conversion
 	 * @param {boolean} [options.scrambled] - if true, the puzzle's solution will be scrambled
 	 * @param {Number} [options.solutionKey] - the solution key with which to scramble the solution. 

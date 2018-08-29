@@ -4,14 +4,15 @@
 
 const path      = require("path");
 const flatten   = require("lodash/flatten");
-const fs        = require("fs");
 const Promise   = require("bluebird");
 const readFile  = Promise.promisify(require("fs").readFile);
 const expect    = require("chai").expect;
-const PUZParser = require("../src/parsers/puz");
-const Puzzle    = require("../src/lib/puzzle");
+const {
+	Puzzle,
+	Parsers,
+}               = require("../src");
 
-const parser = new PUZParser();
+const parser = new Parsers.PUZ();
 
 const puzzleKey = "8329";
 

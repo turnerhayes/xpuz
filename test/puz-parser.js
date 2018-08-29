@@ -8,10 +8,14 @@ const expect    = require("chai").expect;
 const {
 	Parsers,
 	Puzzle,
-	ImmutablePuzzle
 }               = require("../src");
+const ImmutablePuzzle = require("../src/immutable").Puzzle;
+const ImmutableParsers = require("../src/immutable").Parsers;
+
 
 const parser = new Parsers.PUZ();
+
+const immutableParser = new ImmutableParsers.PUZ();
 
 const puzzlePath = path.resolve(__dirname, "puz_files", "NYT_Feb0216.puz");
 
@@ -22,32 +26,34 @@ const puzzleBuffer = fs.readFileSync(puzzlePath);
 describe(".puz file parser", function() {
 	[
 		{
-			method: "parse",
+			immutable: false,
 			constructor: Puzzle,
 			getter: get,
 			size,
+			parser,
 		},
 		{
-			method: "parseImmutable",
+			immutable: true,
 			constructor: ImmutablePuzzle,
 			getter: (obj, path) => obj.getIn(path),
 			size: (obj) => obj.size,
+			parser: immutableParser,
 		},
 	].forEach(
-		(spec) => describe(spec.method, function() {
-			it("should parse a puzzle file without errors", (done) => {
-				parser[spec.method](puzzlePath).then(
+		(spec) => describe(`parse${spec.immutable ? " (immutable)" : ""}`, function() {
+			it(`should parse a puzzle file without errors`, (done) => {
+				spec.parser.parse(puzzlePath).then(
 					(puzzle) => {
-						expect(puzzle).to.be.an.instanceof(constructor);
+						expect(puzzle).to.be.an.instanceof(spec.constructor);
 						done();
 					}
 				).catch(done);
 			});
 
 			it("should parse a rebus puzzle file without errors", (done) => {
-				parser[spec.method](rebusPuzzlePath).then(
+				spec.parser.parse(rebusPuzzlePath).then(
 					(puzzle) => {
-						expect(puzzle).to.be.an.instanceof(constructor);
+						expect(puzzle).to.be.an.instanceof(spec.constructor);
 						/* eslint-disable no-magic-numbers */
 						expect(spec.getter(puzzle.grid, [0, 0, "solution"]), "Rebus solution at [0, 0]").to.equal("J");
 						expect(spec.getter(puzzle.grid, [2, 6, "solution"]), "Rebus solution at [6, 2]").to.equal("ANT");
@@ -59,7 +65,7 @@ describe(".puz file parser", function() {
 			});
 
 			it("should have the expected number of clues", (done) => {
-				parser[spec.method](puzzlePath).then(
+				spec.parser.parse(puzzlePath).then(
 					(puzzle) => {
 						/* eslint-disable no-magic-numbers */
 						expect(spec.size(spec.getter(puzzle.clues, ["across"]), "Across clues count")).to.equal(37);
@@ -72,7 +78,7 @@ describe(".puz file parser", function() {
 			});
 
 			it("should have correct width and height", (done) => {
-				parser[spec.method](puzzlePath).then(
+				spec.parser.parse(puzzlePath).then(
 					(puzzle) => {
 						/* eslint-disable no-magic-numbers */
 						expect(spec.size(puzzle.grid), "Puzzle height").to.equal(15);
@@ -85,7 +91,7 @@ describe(".puz file parser", function() {
 			});
 
 			it("should parse a puzzle from a buffer", (done) => {
-				parser[spec.method](puzzleBuffer).then(
+				spec.parser.parse(puzzleBuffer).then(
 					(puzzle) => {
 						/* eslint-disable no-magic-numbers */
 						expect(spec.size(puzzle.grid), "Puzzle height").to.equal(15);
