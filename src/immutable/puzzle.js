@@ -1,6 +1,7 @@
 const {
 	List,
 	Map,
+	OrderedMap,
 	Record,
 	is,
 	Collection,
@@ -22,8 +23,8 @@ class PuzzleInfo extends Record(infoSchema, "PuzzleInfo") {}
 const schema = {
 	grid: List(),
 	clues: Map({
-		across: Map(),
-		down: Map(),
+		across: OrderedMap(),
+		down: OrderedMap(),
 	}),
 	userSolution: List(),
 	info: new PuzzleInfo(),
@@ -76,7 +77,14 @@ class ImmutablePuzzle extends Record(schema, "ImmutablePuzzle") {
 		};
 
 		if (clues) {
-			args.clues = fromJS(clues);
+			console.log({clues});
+			args.clues = OrderedMap.isOrderedMap(clues) ?
+				clues :
+				OrderedMap(
+					Object.keys(clues).sort().map(
+						(clueNumber) => [clueNumber, clues[clueNumber]]
+					)
+				);
 		}
 
 		if (extensions) {
