@@ -77,13 +77,19 @@ class ImmutablePuzzle extends Record(schema, "ImmutablePuzzle") {
 		};
 
 		if (clues) {
-			console.log({clues});
-			args.clues = OrderedMap.isOrderedMap(clues) ?
+			args.clues = Map.isMap(clues) ?
 				clues :
-				OrderedMap(
-					Object.keys(clues).sort().map(
-						(clueNumber) => [clueNumber, clues[clueNumber]]
-					)
+				Map(
+					["across", "down"].map(
+						(direction) => [
+							direction,
+							OrderedMap(
+								Object.keys(clues[direction]).sort().map(
+									(clueNumber) => [clueNumber, clues[direction][clueNumber]]
+								)
+							)
+						]
+					),
 				);
 		}
 
