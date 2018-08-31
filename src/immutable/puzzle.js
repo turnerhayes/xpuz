@@ -84,7 +84,7 @@ class ImmutablePuzzle extends Record(schema, "ImmutablePuzzle") {
 						(direction) => [
 							direction,
 							OrderedMap(
-								Object.keys(clues[direction]).sort().map(
+								Object.keys(clues[direction]).map(Number).sort().map(
 									(clueNumber) => [clueNumber, clues[direction][clueNumber]]
 								)
 							)
