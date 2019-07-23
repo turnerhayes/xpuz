@@ -16,6 +16,7 @@ const infoSchema = {
 	copyright: "",
 	difficulty: "",
 	intro: "",
+	formatExtra: undefined,
 };
 
 class PuzzleInfo extends Record(infoSchema, "PuzzleInfo") {}

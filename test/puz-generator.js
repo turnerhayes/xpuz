@@ -13,8 +13,13 @@ const parser = new Parsers.PUZ();
 
 function getPuzzleArgs(rebus) {
 	return {
-		title: "Test puzzle",
-		author: "Test author",
+		info: {
+			title: "Test puzzle",
+			author: "Test author",
+			formatExtra: {
+				version: "1.3",
+			},
+		},
 		grid: [
 			[
 				{
