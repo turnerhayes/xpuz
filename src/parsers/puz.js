@@ -432,8 +432,13 @@ function _textChecksum(puzzleData, checksum) {
 		}
 	);
 
-	if (puzzleData.notes) {
-		checksum = _doChecksum(iconv.encode(puzzleData.notes + "\0", PUZReader.ENCODING), checksum);
+	const versionParts = puzzleData.header.version.split(".").map(Number);
+	// Notes only became part of the checksum starting in version 1.3
+	// (see https://github.com/alexdej/puzpy/blob/6109ad5a54359262010d01f2e0175d928bd70962/puz.py#L360)
+	if (versionParts[0] >= 1 && versionParts[1] >= 3) { // eslint-disable-line no-magic-numbers
+		if (puzzleData.notes) {
+			checksum = _doChecksum(iconv.encode(puzzleData.notes + "\0", PUZReader.ENCODING), checksum);
+		}
 	}
 
 	return checksum;
@@ -781,7 +786,7 @@ function _writeHeader(puzzleData, options) {
 			iconv.encode("ACROSS&DOWN\0", PUZReader.ENCODING),
 			headerChecksumBuffer,
 			magicChecksumBuffer,
-			iconv.encode(get(options, "version", "1.3") + "\0", PUZReader.ENCODING),
+			iconv.encode(get(options, "version", puzzleData.header.version) + "\0", PUZReader.ENCODING),
 			// unknown block 1
 			new Buffer([0x0, 0x0]),
 			scrambledChecksumBuffer,
@@ -1005,6 +1010,9 @@ function _getPuzzleData(path, options) {
 							author: puzzleData.author || undefined,
 							copyright: puzzleData.copyright || undefined,
 							intro: puzzleData.notes || undefined,
+							formatExtra: {
+								version: puzzleData.header.version,
+							},
 						},
 						grid: puzzleData.grid,
 						clues: puzzleData.clues,
@@ -1147,7 +1155,8 @@ class PUZParser {
 				height,
 				numberOfClues,
 				puzzleType,
-				solutionState
+				solutionState,
+				version: get(puzzle.info, "formatExtra.version") || "1.3",
 			},
 			answer: _flattenSolution(flattenedAnswerArray),
 			unscrambledAnswer: _flattenSolution(flattenedUnscrambledAnswerArray),
@@ -1156,7 +1165,7 @@ class PUZParser {
 			author: puzzle.info.author,
 			copyright: puzzle.info.copyright,
 			clueList,
-			notes
+			notes,
 		};
 
 		const headerBuffer = _writeHeader(puzzleData, options);

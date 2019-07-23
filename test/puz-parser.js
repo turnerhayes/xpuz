@@ -17,9 +17,11 @@ const parser = new Parsers.PUZ();
 
 const immutableParser = new ImmutableParsers.PUZ();
 
-const puzzlePath = path.resolve(__dirname, "puz_files", "NYT_Feb0216.puz");
+const puzFilesDir = path.resolve(__dirname, "puz_files");
 
-const rebusPuzzlePath = path.resolve(__dirname, "puz_files", "Rebus_NYT_Jan-0710.puz");
+const puzzlePath = path.join(puzFilesDir, "NYT_Feb0216.puz");
+
+const rebusPuzzlePath = path.join(puzFilesDir, "Rebus_NYT_Jan-0710.puz");
 
 const puzzleBuffer = fs.readFileSync(puzzlePath);
 
@@ -43,6 +45,24 @@ describe(".puz file parser", function() {
 		(spec) => describe(`parse${spec.immutable ? " (immutable)" : ""}`, function() {
 			it(`should parse a puzzle file without errors`, (done) => {
 				spec.parser.parse(puzzlePath).then(
+					(puzzle) => {
+						expect(puzzle).to.be.an.instanceof(spec.constructor);
+						done();
+					}
+				).catch(done);
+			});
+
+			it(`should parse a version 1.2 puzzle file without errors`, (done) => {
+				spec.parser.parse(path.join(puzFilesDir, "version-1.2-puzzle.puz")).then(
+					(puzzle) => {
+						expect(puzzle).to.be.an.instanceof(spec.constructor);
+						done();
+					}
+				).catch(done);
+			});
+
+			it(`should parse a version 1.2 puzzle file with notes without errors`, (done) => {
+				spec.parser.parse(path.join(puzFilesDir, "version-1.2-puzzle-with-notes.puz")).then(
 					(puzzle) => {
 						expect(puzzle).to.be.an.instanceof(spec.constructor);
 						done();
