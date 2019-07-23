@@ -18,12 +18,10 @@ module.exports = ({
 	module: {
 		rules: [
 			{
-				test: /\.js$/,
+				test: /\.(j|t)s$/,
 				exclude: /node_modules/,
 				use: [
-					{
-						loader: "babel-loader",
-					},
+					"ts-loader",
 					"eslint-loader"
 				],
 			},
@@ -40,6 +38,7 @@ module.exports = ({
 		modules: ["src", "node_modules"],
 		extensions: [
 			".js",
+			".ts",
 		],
 		mainFields: [
 			"browser",
