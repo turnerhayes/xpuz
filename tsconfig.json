@@ -5,7 +5,7 @@
     "declaration": true,
     "declarationMap": true,
     "sourceMap": true,
-    "outDir": "./dist",
+    "outDir": "./lib",
     "downlevelIteration": true,
     "strict": true,
     "noImplicitAny": true,
@@ -17,5 +17,8 @@
       "./node_modules/@types",
       "./typings"
     ]
-  }
+  },
+  "include": [
+    "./src"
+  ]
 }

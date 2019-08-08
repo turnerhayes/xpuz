@@ -1,0 +1,37 @@
+export const BLOCK_CELL_VALUE = ".";
+
+export const BLOCK_CELL_VALUE_REGEX = /\./g;
+
+export const ACROSS_AND_DOWN_STRING = "ACROSS&DOWN\0";
+
+export const HEADER_CHECKSUM_BYTE_LENGTH = 8;
+
+export const MAGIC_CHECKSUM_BYTE_LENGTH = 8;
+
+export const UNKNOWN1_BYTE_LENGTH = 2;
+
+export const UNKNOWN2_BYTE_LENGTH = 12;
+
+export const CHECKSUM_BUFFER_LENGTH = 2;
+
+export const NUMBER_OF_CLUES_BUFFER_LENGTH = 2;
+
+export const PUZZLE_TYPE_BUFFER_LENGTH = 2;
+
+export const SOLUTION_STATE_BUFFER_LENGTH = 2;
+
+export const HEADER_BUFFER_LENGTH = 52;
+
+export const EXTENSION_LENGTH_BUFFER_LENGTH = 2;
+
+export const EXTENSION_HEADER_LENGTH = 8;
+
+export const EXTENSION_NAME_LENGTH = 4;
+
+export const PUZZLE_KEY_LENGTH = 4;
+
+export const MINIMUM_KEY_VALUE = 1000;
+
+export const MAXIMUM_KEY_VALUE = 9999;
+
+export const ATOZ = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";

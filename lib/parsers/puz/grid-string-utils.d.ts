@@ -1,0 +1,10 @@
+export declare const padStart: (str: string, length: number, padChar: string) => string;
+export declare const transposeGrid: (gridString: string, width: number, height: number) => string;
+export declare const restoreSolution: (s: string, t: string) => string;
+export declare const shift: (str: string, key: string | number[]) => string;
+export declare const unshift: (str: string, key: string) => string;
+export declare const everyOther: (str: string) => string;
+export declare const unshuffle: (str: string) => string;
+export declare const unscrambleString: (str: string, key: string) => string;
+export declare const scrambleString: (str: string, key: string) => string;
+//# sourceMappingURL=grid-string-utils.d.ts.map

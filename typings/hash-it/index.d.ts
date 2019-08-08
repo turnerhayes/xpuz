@@ -1,3 +1,3 @@
 declare module "hash-it" {
-  export default (obj: any) => number;
+  export default function(obj: any): number;
 }

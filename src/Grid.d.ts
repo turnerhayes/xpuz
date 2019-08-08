@@ -1,20 +1,20 @@
-export interface IGridCell {
-  /**
-   * true if this is a block cell (a black cell that doesn't contain any part
-   * of the solution).
-   */
-  isBlockCell?: boolean;
-}
+import { List, Record, } from "immutable";
 
-export interface IInputCell extends IGridCell {
+export type BlockGridCell = { isBlockCell: true };
+
+export type ImmutableBlockGridCell = Record.Class & {isBlockCell: true};
+
+export interface IInputCell {
+  isBlockCell?: false;
+
   /**
    * The clue number associated with this cell, if any.
    */
-  clueNumber: number|null;
+  clueNumber?: number;
   /**
    * The clues that cover this cell.
    */
-  containingClues: {
+  containingClues?: {
     /**
      * The across clue, if any, that covers this cell.
      */
@@ -28,9 +28,27 @@ export interface IInputCell extends IGridCell {
    * A string describing a shape, if any, that should be
    * displayed in the background of the cell (e.g. a circle).
    */
-  backgroundShape: string|undefined;
+  backgroundShape?: string;
 
   solution?: string;
 }
 
-export type Grid = Array<IGridCell[]>;
+export type GridCell = BlockGridCell|IInputCell;
+
+
+export type ImmutableInputGridCell = Record.Class & {
+  isBlockCell: false,
+  clueNumber?: number,
+  containingClues: Record.Class & {
+    across?: number,
+    down?: number,
+  },
+  backgroundShape?: string,
+  solution?: string,
+};
+
+export type ImmutableGridCell = ImmutableBlockGridCell|ImmutableInputGridCell;
+
+export type Grid = Array<GridCell[]>;
+
+export type ImmutableGrid = List<List<ImmutableGridCell>>;

@@ -11,27 +11,25 @@ import IPUZ from "./parsers/ipuz";
 import PUZ from "./parsers/puz";
 import JPZ from "./parsers/jpz";
 
-export default {
+/**
+ * Puzzle file parser constructors
+ */
+export const Parsers = {
 	/**
-	 * Puzzle file parser constructors
+	 * .ipuz file parser
 	 */
-	Parsers: {
-		/**
-		 * .ipuz file parser
-		 */
-		IPUZ,
-		/**
-		 * .puz file parser
-		 */
-		PUZ,
-		/**
-		 * .jpz file parser
-		 */
-		JPZ,
-	},
-
+	IPUZ,
 	/**
-	 * Puzzle object constructor
+	 * .puz file parser
 	 */
-	Puzzle,
+	PUZ,
+	/**
+	 * .jpz file parser
+	 */
+	JPZ,
 };
+
+/**
+ * Puzzle object constructor
+ */
+export { Puzzle };

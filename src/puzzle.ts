@@ -1,12 +1,38 @@
 import reduce from "lodash/reduce";
 import isEqual from "lodash/isEqual";
+import get from "lodash/get";
+import set from "lodash/set";
 import { Grid } from "./Grid";
-import BasePuzzle, { ClueMap, IPuzzleConstructorArgs } from "./base-puzzle";
+import { ClueMap, IPuzzleClues, IPuzzleInfo, IPuzzleConstructorArgs, findContainingClues, processGrid, IPuzzleJSON } from "./puzzle-utils";
+import size = require("lodash/size");
+import hashIt from "hash-it";
 
 /**
  * Represents a puzzle object
  */
-export default class Puzzle extends BasePuzzle {
+export default class Puzzle {
+	/**
+	 * The definition of the puzzle grid. It is represented as an array of rows, so
+	 *	`grid[0]` is the first row of the puzzle.
+	 */
+	public grid: Grid;
+
+	/**
+	 * Listing of clues for the puzzle.
+	 */
+	public clues: IPuzzleClues;
+
+  public info: IPuzzleInfo;
+  
+  /**
+	 * A structure representing the current solution as the user has filled it out.
+	 *	The structure is similar to {@link Grid}, but
+   *	each item is a string containing the user's current answer--an empty string
+   *	if the corresponding grid cell is not filled in, a non-empty string if it's
+   *	filled in.
+   */
+	public userSolution: Array<(string|null)[]>;
+
 	constructor(
 		{
 			grid,
@@ -26,20 +52,92 @@ export default class Puzzle extends BasePuzzle {
 			 * Information about the puzzle
 			 */
 			info,
-			/**
-			 * Extra, possibly implementation-specific information about the puzzle,
-			 * such as timer information
-			 */
-			extensions,
 		}: IPuzzleConstructorArgs
 	) {
-		super({
-			grid,
-			clues,
-			userSolution,
-			info,
-			extensions,
+		this.grid = grid || [];
+
+    this.grid = processGrid<Grid>({
+			grid: this.grid,
+			get: this.getInGrid,
+			set: this.setInGrid,
+			sizeOf: size,
 		});
+
+		this.clues = clues || {
+			across: {},
+			down: {},
+		};
+
+		info = info || {};
+
+		this.info = {
+			title: info.title || "",
+			author: info.author || "",
+			copyright: info.copyright || "",
+			publisher: info.publisher || "",
+			difficulty: info.difficulty || "",
+			intro: info.intro || "",
+			formatExtra: info.formatExtra,
+		};
+
+		this.userSolution = userSolution || grid.map(
+			(row) => row.map(
+				(cell) => cell.isBlockCell ? null : ""
+			)
+		);
+	}
+
+	findContainingClues(
+		{
+			rowIndex,
+			columnIndex,
+		}: {
+			rowIndex: number,
+			columnIndex: number,
+		}
+	) {
+		return findContainingClues({
+			grid: this.grid,
+			rowIndex,
+			columnIndex,
+			get: this.getInGrid,
+			sizeOf: size,
+		})
+	}
+
+	processGrid() {
+		return processGrid({
+			grid: this.grid,
+			get: this.getInGrid,
+			set: this.setInGrid,
+			sizeOf: size,
+		});
+	}
+
+	updateGrid() {
+		this.grid = processGrid({
+			grid: this.grid,
+			get: this.getInGrid,
+			set: this.setInGrid,
+			sizeOf: size,
+		});
+	}
+
+	hashCode() {
+		return hashIt(this);
+	}
+
+	toJSON(): IPuzzleJSON {
+		return {
+			grid: this.grid,
+			clues: this.clues,
+			userSolution: this.userSolution,
+			info: this.info,
+		};
+	}
+
+	toString() {
+		return "Puzzle";
 	}
 
 	/**
@@ -74,13 +172,28 @@ export default class Puzzle extends BasePuzzle {
 					),
 				},
 				userSolution: this.userSolution.map(
-					(row: string[]) => row.map(
+					(row: (string|null)[]) => row.map(
 						(cell) => cell // Values in userSolution are just strings
 					)
 				),
 				info: Object.assign({}, this.info),
-				extensions: JSON.parse(JSON.stringify(this.extensions)), // Deep clone
 			}
 		);
+	}
+
+	equals(other: any) {
+		if (!(other instanceof Puzzle)) {
+			return false;
+		}
+
+		return isEqual(this.toJSON(), other.toJSON());
+	}
+
+	private getInGrid = (path: (string|number)[]): any => {
+		return get(this.grid, path);
+	}
+
+	private setInGrid = (path: (string|number)[], value: any): Grid => {
+		return set(this.grid, path, value);
 	}
 }

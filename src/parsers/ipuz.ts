@@ -8,7 +8,8 @@ import readFile from "./read-file";
 import get from "lodash/get";
 import isObject from "lodash/isObject";
 import Puzzle from "../puzzle";
-import { ClueMap } from "../base-puzzle";
+import { ClueMap } from "../puzzle-utils";
+import ImmutablePuzzle from "../immutable/puzzle";
 
 const BLOCK_VALUE = "#";
 
@@ -163,12 +164,32 @@ async function _parsePuzzle(puzzle: string|IIPUZPuzzle): Promise<Puzzle> {
 /**
  * Parser class for IPUZ-formatted puzzles
  */
-class IPUZParser {
+class IPUZParser<T extends (Puzzle|ImmutablePuzzle) = Puzzle> {
 	/**
-	 * Parses a {@link module:xpuz/puzzle~Puzzle|Puzzle} from the input.
+	 * Parses a {@link Puzzle} from the input.
 	 */
-	parse(puzzle: string|IIPUZPuzzle): Promise<Puzzle> {
-		return _parsePuzzle(puzzle);
+	async parse(
+		puzzle: string|IIPUZPuzzle,
+		options: {
+			converter?: (puzzle: Puzzle) => T,
+		} = {},
+	): Promise<T> {
+		let parsed = await _parsePuzzle(puzzle);
+
+		if (options.converter) {
+			return options.converter(parsed);
+		}
+
+		return parsed as T;
+	}
+
+	async generate(
+		puzzle: T,
+		options: {
+			preprocessor?: (puzzle: T) => Puzzle,
+		} = {},
+	): Promise<IIPUZPuzzle> {
+		throw new Error("Not implemented");
 	}
 }
 

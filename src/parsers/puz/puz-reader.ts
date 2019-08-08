@@ -11,7 +11,7 @@ const INT32_BYTE_COUNT = 4;
 
 const DEFAULT_STRING_BUFFER_LENGTH = 20;
 
-class PUZReader {
+export default class PUZReader {
 	static ENCODING = ENCODING
 
 	private bufferReader: BufferReader;
@@ -125,5 +125,3 @@ class PUZReader {
 		return this.bufferReader.tell();
 	}
 }
-
-export default PUZReader;

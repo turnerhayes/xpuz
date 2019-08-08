@@ -1,4 +1,5 @@
 import Puzzle from "../puzzle";
+import ImmutablePuzzle from "../immutable/puzzle";
 
 /**
  * JPZ Parser
@@ -14,18 +15,35 @@ function _parsePuzzle(puzzle: string|{}): Promise<Puzzle> {
 /**
  * JPZ parser class
  */
-class JPZParser {
+class JPZParser<T extends (Puzzle|ImmutablePuzzle) = Puzzle> {
 	/**
 	 * Parses a {@link module:xpuz/puzzle~Puzzle} from the input
 	 *
-	 * @param {string|object} puzzle - the source to parse the puzzle from; if a string,
-	 *	it is assumed to be a file path, if an object, it defines a Puzzle object
-	 *
-	 * @return {external:Promise<module:xpuz/puzzle~Puzzle>} a promise that resolves with
+	 * @return {T} a promise that resolves with
 	 *	the parsed puzzle object
 	 */
-	parse(puzzle: any) {
-		return _parsePuzzle(puzzle);
+	async parse(
+		path: string,
+		options: {
+			converter?: (puzzle: Puzzle) => T,
+		}
+	): Promise<T> {
+		let puzzle = await _parsePuzzle(path);
+
+		if (options.converter) {
+			return options.converter(puzzle);
+		}
+
+		return puzzle as T;
+	}
+
+	generate(
+		puzzle: T,
+		options: {
+			preprocessor?: (puzzle: T) => Puzzle,
+		}
+	): Promise<Buffer> {
+		throw new Error("Not implemented");
 	}
 }
 

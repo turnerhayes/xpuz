@@ -18,11 +18,15 @@ module.exports = ({
 	module: {
 		rules: [
 			{
-				test: /\.(j|t)s$/,
+				test: /\.ts$/,
 				exclude: /node_modules/,
 				use: [
-					"ts-loader",
-					"eslint-loader"
+					// "eslint-loader",
+					{
+						loader: "ts-loader",
+						options: {
+						},
+					},
 				],
 			},
 		],
@@ -35,7 +39,7 @@ module.exports = ({
 		new webpack.NamedModulesPlugin(),
 	],
 	resolve: {
-		modules: ["src", "node_modules"],
+		modules: ["node_modules", "src"],
 		extensions: [
 			".js",
 			".ts",
