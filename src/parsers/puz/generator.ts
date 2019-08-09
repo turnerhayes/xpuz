@@ -1,47 +1,47 @@
-import flatten from "lodash/flatten";
+import iconv from "iconv-lite";
 import chunk from "lodash/chunk";
 import compact from "lodash/compact";
 import findKey from "lodash/findKey";
-import iconv from "iconv-lite";
+import flatten from "lodash/flatten";
 
-import { IPuzzleJSON } from "../../puzzle-utils";
 import { Grid, GridCell, IInputCell } from "../../Grid";
-import PUZReader from "./puz-reader";
+import { IPuzzleJSON } from "../../puzzle-utils";
 import {
+  ExtensionName,
+  IHeaderData,
   PuzzleType,
   SolutionState,
-  IHeaderData,
-  ExtensionName,
 } from "./common";
-import {
-  transposeGrid,
-  restoreSolution,
-  padStart,
-  scrambleString,
-} from "./grid-string-utils";
 import {
   BLOCK_CELL_VALUE,
   BLOCK_CELL_VALUE_REGEX,
   CHECKSUM_BUFFER_LENGTH,
-  HEADER_CHECKSUM_BYTE_LENGTH,
   EXTENSION_LENGTH_BUFFER_LENGTH,
   EXTENSION_NAME_LENGTH,
+  HEADER_BUFFER_LENGTH,
+  HEADER_CHECKSUM_BYTE_LENGTH,
+  MAXIMUM_KEY_VALUE,
+  MINIMUM_KEY_VALUE,
+  NUMBER_OF_CLUES_BUFFER_LENGTH,
+  PUZZLE_TYPE_BUFFER_LENGTH,
   SOLUTION_STATE_BUFFER_LENGTH,
   UNKNOWN1_BYTE_LENGTH,
   UNKNOWN2_BYTE_LENGTH,
-  HEADER_BUFFER_LENGTH,
-  PUZZLE_TYPE_BUFFER_LENGTH,
-  NUMBER_OF_CLUES_BUFFER_LENGTH,
-  MINIMUM_KEY_VALUE,
-  MAXIMUM_KEY_VALUE,
 } from "./constants";
+import {
+  padStart,
+  restoreSolution,
+  scrambleString,
+  transposeGrid,
+} from "./grid-string-utils";
+import PUZReader from "./puz-reader";
 
-type RebusSolutionMap = {
-	[key: number]: {
-		solution: string,
-		cells: number[],
-	},
-};
+interface IRebusSolutionMap {
+  [key: number]: {
+    solution: string,
+    cells: number[],
+  };
+}
 
 const NULL_BYTE = String.fromCharCode(0);
 
@@ -70,13 +70,13 @@ function writeExtensions(
   timing?: {
     elapsed: number,
     running: boolean,
-  },
+  }
 ): Buffer {
   let solutionKey = 0;
 
-  const rebusSolutions: RebusSolutionMap = flatten(answerArray).reduce(
+  const rebusSolutions: IRebusSolutionMap = flatten(answerArray).reduce(
     (
-      solutions: RebusSolutionMap,
+      solutions: IRebusSolutionMap,
       cellSolution: string,
       cellIndex: number
     ) => {
@@ -88,8 +88,7 @@ function writeExtensions(
             solution: cellSolution,
             cells: [cellIndex]
           };
-        }
-        else {
+        } else {
           solutions[key as unknown as number].cells.push(cellIndex);
         }
       }
@@ -103,16 +102,16 @@ function writeExtensions(
     new Buffer(
       answerArray.map(
         (cell, index) => {
-          const solutionKey = findKey(
+          const key = findKey(
             rebusSolutions,
             (solutionInfo) => solutionInfo.cells.includes(index)
           );
 
-          if (solutionKey === undefined) {
+          if (key === undefined) {
             return 0;
           }
 
-          return parseInt(solutionKey, 10) + 1;
+          return parseInt(key, 10) + 1;
         }
       )
     ),
@@ -174,7 +173,7 @@ function writeExtensions(
 
   return Buffer.concat(
     buffers,
-    totalBufferLength,
+    totalBufferLength
   );
 }
 
@@ -217,10 +216,10 @@ function magicChecksum(
     clueList: string[],
   }
 ): Buffer {
-  const _headerChecksum = getHeaderChecksum(header);
-  const answerChecksum = doChecksum(iconv.encode(answer, PUZReader.ENCODING));
-  const solutionChecksum = doChecksum(iconv.encode(solution, PUZReader.ENCODING));
-  const _textChecksum = textChecksum({
+  const headerChecksumValue = getHeaderChecksum(header);
+  const answerChecksumValue = doChecksum(iconv.encode(answer, PUZReader.ENCODING));
+  const solutionChecksumValue = doChecksum(iconv.encode(solution, PUZReader.ENCODING));
+  const textChecksumValue = textChecksum({
     title,
     author,
     copyright,
@@ -231,21 +230,20 @@ function magicChecksum(
 
   const MAGIC_CHECKSUM_STRING = "ICHEATED";
 
-  const magicChecksum = new Buffer([
-    /* eslint-disable no-magic-numbers */
-    MAGIC_CHECKSUM_STRING.charCodeAt(0) ^ (_headerChecksum & 0xFF),
-    MAGIC_CHECKSUM_STRING.charCodeAt(1) ^ (answerChecksum & 0xFF),
-    MAGIC_CHECKSUM_STRING.charCodeAt(2) ^ (solutionChecksum & 0xFF),
-    MAGIC_CHECKSUM_STRING.charCodeAt(3) ^ (_textChecksum & 0xFF),
-    MAGIC_CHECKSUM_STRING.charCodeAt(4) ^ ((_headerChecksum & 0xFF00) >> 8),
-    MAGIC_CHECKSUM_STRING.charCodeAt(5) ^ ((answerChecksum & 0xFF00) >> 8),
-    MAGIC_CHECKSUM_STRING.charCodeAt(6) ^ ((solutionChecksum & 0xFF00) >> 8),
-    MAGIC_CHECKSUM_STRING.charCodeAt(7) ^ ((_textChecksum & 0xFF00) >> 8)
-    /* eslint-enable no-magic-numbers */
+  const magicChecksumValue = new Buffer([
+    /* tslint:disable:no-bitwise */
+    MAGIC_CHECKSUM_STRING.charCodeAt(0) ^ (headerChecksumValue & 0xFF),
+    MAGIC_CHECKSUM_STRING.charCodeAt(1) ^ (answerChecksumValue & 0xFF),
+    MAGIC_CHECKSUM_STRING.charCodeAt(2) ^ (solutionChecksumValue & 0xFF),
+    MAGIC_CHECKSUM_STRING.charCodeAt(3) ^ (textChecksumValue & 0xFF),
+    MAGIC_CHECKSUM_STRING.charCodeAt(4) ^ ((headerChecksumValue & 0xFF00) >> 8),
+    MAGIC_CHECKSUM_STRING.charCodeAt(5) ^ ((answerChecksumValue & 0xFF00) >> 8),
+    MAGIC_CHECKSUM_STRING.charCodeAt(6) ^ ((solutionChecksumValue & 0xFF00) >> 8),
+    MAGIC_CHECKSUM_STRING.charCodeAt(7) ^ ((textChecksumValue & 0xFF00) >> 8)
+    /* tslint:enable:no-bitwise */
   ]);
 
-
-  return magicChecksum;
+  return magicChecksumValue;
 }
 
 function scrambledChecksum(
@@ -264,19 +262,19 @@ function scrambledChecksum(
 
 function doChecksum(buffer: Buffer, cksum: number = 0): number {
   for (let i = 0; i < buffer.length; i++) {
+    // tslint:disable:no-bitwise
     // right-shift one with wrap-around
     const lowbit = cksum & 0x0001;
 
     cksum = cksum >> 1;
 
     if (lowbit) {
-      // eslint-disable-next-line no-magic-numbers
       cksum = cksum | 0x8000;
     }
 
     // then add in the data and clear any carried bit past 16
-    // eslint-disable-next-line no-magic-numbers
     cksum = (cksum + buffer.readUInt8(i)) & 0xFFFF;
+    // tslint:eable:no-bitwise
   }
 
   return cksum;
@@ -351,8 +349,7 @@ function writeHeader(
       ),
       0
     );
-  }
-  else {
+  } else {
     scrambledChecksumBuffer.fill(0x0);
   }
 
@@ -488,7 +485,7 @@ function textChecksum(
 }
 
 function getHeaderChecksum(header: IHeaderData, checksum?: number) {
-  if(checksum === undefined) {
+  if (checksum === undefined) {
     checksum = 0;
   }
 
@@ -543,70 +540,71 @@ function pluckSolutions(
 }
 
 export const generate = (puzzle: IPuzzleJSON, solutionKey?: string): Buffer => {
-		const numberOfClues = Object.keys(puzzle.clues.across).length + Object.keys(puzzle.clues.down).length;
-		const puzzleType = PuzzleType.Normal;
-		let solutionState = SolutionState.Unlocked;
+    const numberOfClues = Object.keys(puzzle.clues.across).length + Object.keys(puzzle.clues.down).length;
+    const puzzleType = PuzzleType.Normal;
+    let solutionState = SolutionState.Unlocked;
 
-		const height = puzzle.grid.length;
-		const width = puzzle.grid[0].length;
+    const height = puzzle.grid.length;
+    const width = puzzle.grid[0].length;
 
     const notes = puzzle.info.intro || "";
-    
+
     let answerArray = pluckSolutions(puzzle.grid);
     let unscrambledAnswerArray: string[][]|undefined;
 
-		if (solutionKey) {
-			if (
-				Number(solutionKey) < MINIMUM_KEY_VALUE ||
-				Number(solutionKey) > MAXIMUM_KEY_VALUE
-			) {
-				throw new Error(`Must specify a solution key that is an integer >= 1000 and <= 9999; was ${solutionKey}`);
-			}
+    if (solutionKey) {
+      if (
+        Number(solutionKey) < MINIMUM_KEY_VALUE ||
+        Number(solutionKey) > MAXIMUM_KEY_VALUE
+      ) {
+        throw new Error(`Must specify a solution key that is an integer >= 1000 and <= 9999; was ${solutionKey}`);
+      }
 
-			unscrambledAnswerArray = answerArray;
-			answerArray = scrambleSolution(answerArray, solutionKey);
+      unscrambledAnswerArray = answerArray;
+      answerArray = scrambleSolution(answerArray, solutionKey);
 
-			solutionState = SolutionState.Locked;
-		}
-		const flattenedAnswerArray = flatten(answerArray);
+      solutionState = SolutionState.Locked;
+    }
+    const flattenedAnswerArray = flatten(answerArray);
     const flattenedUnscrambledAnswerArray = flatten(unscrambledAnswerArray || answerArray);
 
-		const userSolution = puzzle.userSolution.map(
-			(row) => row.map(
-				(solution) => {
-					if (solution === null) {
-						return BLOCK_CELL_VALUE;
-					}
+    const userSolution = puzzle.userSolution.map(
+      (row) => row.map(
+        // tslint:disable-next-line:no-shadowed-variable
+        (solution) => {
+          if (solution === null) {
+            return BLOCK_CELL_VALUE;
+          }
 
-					if (solution === "") {
-						return "-";
-					}
+          if (solution === "") {
+            return "-";
+          }
 
-					return solution;
-				}
-			)
-		);
+          return solution;
+        }
+      )
+    );
 
     const userSolutionArray = flatten(userSolution);
 
-		const clueList = compact(flatten(puzzle.grid).map(
-			(cell: GridCell) => (cell as IInputCell).clueNumber
-		)).reduce(
-			(cluesArray: string[], clueNumber: number) => {
-				if (puzzle.clues.across[clueNumber] !== undefined) {
-					cluesArray.push(puzzle.clues.across[clueNumber]);
-				}
+    const clueList = compact(flatten(puzzle.grid).map(
+      (cell: GridCell) => (cell as IInputCell).clueNumber
+    )).reduce(
+      (cluesArray: string[], clueNumber: number) => {
+        if (puzzle.clues.across[clueNumber] !== undefined) {
+          cluesArray.push(puzzle.clues.across[clueNumber]);
+        }
 
-				if (puzzle.clues.down[clueNumber] !== undefined) {
-					cluesArray.push(puzzle.clues.down[clueNumber]);
-				}
+        if (puzzle.clues.down[clueNumber] !== undefined) {
+          cluesArray.push(puzzle.clues.down[clueNumber]);
+        }
 
-				return cluesArray;
-			},
-			[]
+        return cluesArray;
+      },
+      []
     );
 
-		const header = {
+    const header = {
       width,
       height,
       numberOfClues,
@@ -614,76 +612,77 @@ export const generate = (puzzle: IPuzzleJSON, solutionKey?: string): Buffer => {
       solutionState,
       version: (puzzle.info && puzzle.info.formatExtra && puzzle.info.formatExtra.version) ||
         "1.3",
-		};
+    };
 
-		const answer = flattenSolution(flattenedAnswerArray);
-		const unscrambledAnswer = flattenSolution(flattenedUnscrambledAnswerArray);
-		const solution = flattenSolution(userSolution);
+    const answer = flattenSolution(flattenedAnswerArray);
+    const unscrambledAnswer = flattenSolution(flattenedUnscrambledAnswerArray);
+    const solution = flattenSolution(userSolution);
 
+    const headerBuffer = writeHeader({
+      header,
+      unscrambledAnswer,
+      answer,
+      solution,
+      title: puzzle.info.title,
+      author: puzzle.info.author,
+      copyright: puzzle.info.copyright,
+      notes,
+      clueList,
+      scrambled: Boolean(solutionKey),
+    });
 
-		const headerBuffer = writeHeader({
-			header,
-			unscrambledAnswer,
-			answer,
-			solution,
-			title: puzzle.info.title,
-			author: puzzle.info.author,
-			copyright: puzzle.info.copyright,
-			notes,
-			clueList,
-			scrambled: Boolean(solutionKey),
-		});
+    const answerStringBuffer = iconv.encode(
+      flattenSolution(answerArray),
+      PUZReader.ENCODING
+    );
 
-		const answerStringBuffer = iconv.encode(
-			flattenSolution(answerArray),
-			PUZReader.ENCODING
-		);
+    const userSolutionStringBuffer = iconv.encode(
+      userSolutionArray.map(
+        // tslint:disable-next-line:no-shadowed-variable
+        (solution) => solution[0]
+      ).join(""),
+      PUZReader.ENCODING
+    );
 
-		const userSolutionStringBuffer = iconv.encode(
-			userSolutionArray.map(
-				(solution) => solution[0]
-			).join(""),
-			PUZReader.ENCODING
-		);
+    const titleStringBuffer = iconv.encode(`${puzzle.info.title || ""}${NULL_BYTE}`, PUZReader.ENCODING);
+    const authorStringBuffer = iconv.encode(`${puzzle.info.author || ""}${NULL_BYTE}`, PUZReader.ENCODING);
+    const copyrightStringBuffer = iconv.encode(`${puzzle.info.copyright || ""}${NULL_BYTE}`, PUZReader.ENCODING);
 
-		const titleStringBuffer = iconv.encode(`${puzzle.info.title || ""}${NULL_BYTE}`, PUZReader.ENCODING);
-		const authorStringBuffer = iconv.encode(`${puzzle.info.author || ""}${NULL_BYTE}`, PUZReader.ENCODING);
-		const copyrightStringBuffer = iconv.encode(`${puzzle.info.copyright || ""}${NULL_BYTE}`, PUZReader.ENCODING);
+    const cluesStringBuffer = iconv.encode(`${clueList.join(NULL_BYTE)}${NULL_BYTE}`, PUZReader.ENCODING);
 
-		const cluesStringBuffer = iconv.encode(`${clueList.join(NULL_BYTE)}${NULL_BYTE}`, PUZReader.ENCODING);
+    const notesStringBuffer = iconv.encode(`${notes}${NULL_BYTE}`, PUZReader.ENCODING);
 
-		const notesStringBuffer = iconv.encode(`${notes}${NULL_BYTE}`, PUZReader.ENCODING);
+    const buffers = [
+      headerBuffer,
+      answerStringBuffer,
+      userSolutionStringBuffer,
+      titleStringBuffer,
+      authorStringBuffer,
+      copyrightStringBuffer,
+      cluesStringBuffer,
+      notesStringBuffer,
+    ];
 
-		const buffers = [
-			headerBuffer,
-			answerStringBuffer,
-			userSolutionStringBuffer,
-			titleStringBuffer,
-			authorStringBuffer,
-			copyrightStringBuffer,
-			cluesStringBuffer,
-			notesStringBuffer,
-		];
+    let totalBufferLength = headerBuffer.length + answerStringBuffer.length +
+      userSolutionStringBuffer.length + titleStringBuffer.length +
+      authorStringBuffer.length + copyrightStringBuffer.length +
+      cluesStringBuffer.length + notesStringBuffer.length;
 
-		let totalBufferLength = headerBuffer.length + answerStringBuffer.length +
-			userSolutionStringBuffer.length + titleStringBuffer.length +
-			authorStringBuffer.length + copyrightStringBuffer.length +
-			cluesStringBuffer.length + notesStringBuffer.length;
-
-		if (
-			flattenedUnscrambledAnswerArray.some((solution) => solution.length > 1)
-		) {
-			const extensionsBuffer = writeExtensions(
-				flattenedUnscrambledAnswerArray,
-				userSolutionArray,
+    if (
+      // tslint:disable-next-line:no-shadowed-variable
+      flattenedUnscrambledAnswerArray.some((solution) => solution.length > 1)
+    ) {
+      const extensionsBuffer = writeExtensions(
+        flattenedUnscrambledAnswerArray,
+        userSolutionArray,
         puzzle.info.formatExtra && puzzle.info.formatExtra.extensions &&
-          puzzle.info.formatExtra.extensions.timing,
-			);
+          puzzle.info.formatExtra.extensions.timing
+      );
 
-			buffers.push(extensionsBuffer);
+      buffers.push(extensionsBuffer);
 
-			totalBufferLength += extensionsBuffer.length;
-		}
+      totalBufferLength += extensionsBuffer.length;
+    }
 
-		return Buffer.concat(buffers, totalBufferLength);
+    return Buffer.concat(buffers, totalBufferLength);
 };

@@ -21,12 +21,8 @@ module.exports = ({
 				test: /\.ts$/,
 				exclude: /node_modules/,
 				use: [
-					// "eslint-loader",
-					{
-						loader: "ts-loader",
-						options: {
-						},
-					},
+					"ts-loader",
+					"tslint-loader",
 				],
 			},
 		],

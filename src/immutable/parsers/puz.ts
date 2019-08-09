@@ -1,20 +1,20 @@
 import MutablePUZParser, { PuzzleContent } from "../../parsers/puz";
-import { toImmutable, toMutable } from "../utils";
 import ImmutablePuzzle from "../puzzle";
+import { toImmutable, toMutable } from "../utils";
 
 export default class PUZParser extends MutablePUZParser<ImmutablePuzzle> {
-	parse(
-		path: PuzzleContent,
-		options: {
-			solutionKey?: string,
-		} = {}
-	) {
-		return super.parse(
-			path,
-			{
-				...options,
-				converter: toImmutable,
-			}
-		);
-	}
+  public parse(
+    path: PuzzleContent,
+    options: {
+      solutionKey?: string,
+    } = {}
+  ) {
+    return super.parse(
+      path,
+      {
+        ...options,
+        converter: toImmutable,
+      }
+    );
+  }
 }

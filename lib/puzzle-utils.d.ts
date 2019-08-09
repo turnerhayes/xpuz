@@ -1,7 +1,7 @@
 import { Map, OrderedMap } from "immutable";
 import { Grid } from "./Grid";
-export declare type GetterFunction = (path: (string | number)[]) => any;
-export declare type SetterFunction<T = any> = (path: (string | number)[], value: any) => T;
+export declare type GetterFunction = (path: Array<string | number>) => any;
+export declare type SetterFunction<T = any> = (path: Array<string | number>, value: any) => T;
 export declare type SizeOfFunction = (item: any) => number;
 export declare type DirectionKey = "across" | "down";
 export declare type ClueMap = {
@@ -23,7 +23,7 @@ export interface IPuzzleClues {
 export interface IPuzzleJSON {
     grid: Grid;
     clues: IPuzzleClues;
-    userSolution: (string | null)[][];
+    userSolution: Array<Array<string | null>>;
     info: IPuzzleInfo;
 }
 export declare type ImmutablePuzzleClues = Map<DirectionKey, OrderedMap<number, string>>;
@@ -31,8 +31,8 @@ export interface IPuzzleConstructorArgs {
     grid: Grid;
     clues: IPuzzleClues;
     info?: IPuzzleInfo;
-    userSolution?: (string | null)[][];
-    solution?: (string | null)[][];
+    userSolution?: Array<Array<string | null>>;
+    solution?: Array<Array<string | null>>;
 }
 /**
  * Finds which across and down clues a grid cell is a member of.

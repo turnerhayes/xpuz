@@ -1,13 +1,13 @@
 export enum PuzzleType {
   Normal = 0x0001,
-	Diagramless = 0x0401,
+  Diagramless = 0x0401,
 }
 
 export enum SolutionState {
   // solution is available in plaintext
-	Unlocked = 0x0000,
-	// solution is locked (scrambled) with a key
-	Locked = 0x0004,
+  Unlocked = 0x0000,
+  // solution is locked (scrambled) with a key
+  Locked = 0x0004,
 }
 
 export interface IHeaderData {

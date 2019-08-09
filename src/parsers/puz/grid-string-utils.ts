@@ -1,10 +1,10 @@
 import zip from "lodash/zip";
 
 import {
+  ATOZ,
   BLOCK_CELL_VALUE,
   BLOCK_CELL_VALUE_REGEX,
   PUZZLE_KEY_LENGTH,
-  ATOZ,
 } from "./constants";
 
 export const padStart = (str: string, length: number, padChar: string): string => {
@@ -18,7 +18,7 @@ export const transposeGrid = (
   width: number,
   height: number
 ): string => {
-  // Chunk grid into chunks of size width    
+  // Chunk grid into chunks of size width
   const data = gridString.match(new RegExp(".{1," + width + "}", "g"));
 
   if (data === null) {
@@ -28,11 +28,11 @@ export const transposeGrid = (
   return range(width).map(
     (_, columnNumber) => range(height).map(
       // columns become rows, rows become columns
+      // tslint:disable-next-line:no-shadowed-variable
       (_, rowNumber) => data[rowNumber][columnNumber]
     ).join("")
   ).join("");
-}
-
+};
 
 export const restoreSolution = (s: string, t: string) => {
   /*
@@ -45,15 +45,14 @@ export const restoreSolution = (s: string, t: string) => {
   >>> restore('ABC.DEF', 'XYZABC')
   'XYZ.ABC'
   */
-    
+
   const splitTarget = t.split("");
 
   return s.split("").reduce(
     (arr: string[], c) => {
       if (c === BLOCK_CELL_VALUE) {
         arr.push(c);
-      }
-      else {
+      } else {
         arr.push(splitTarget.shift() as string);
       }
 
@@ -103,25 +102,25 @@ export const unshuffle = (str: string): string => {
 };
 
 const shuffle = (str: string): string => {
-	// eslint-disable-next-line no-magic-numbers
-	const mid = Math.floor(str.length / 2);
+  // eslint-disable-next-line no-magic-numbers
+  const mid = Math.floor(str.length / 2);
 
-	return zip(
-		str.substring(mid).split(""),
-		str.substring(0, mid).split("")
-	).reduce(
-		(arr: string[], chars) => {
-			if (chars[0] === undefined || chars[1] === undefined) {
-				return arr;
-			}
+  return zip(
+    str.substring(mid).split(""),
+    str.substring(0, mid).split("")
+  ).reduce(
+    (arr: string[], chars) => {
+      if (chars[0] === undefined || chars[1] === undefined) {
+        return arr;
+      }
 
-			arr.push(chars[0] + chars[1]);
+      arr.push(chars[0] + chars[1]);
 
-			return arr;
-		},
-		[]
-	// eslint-disable-next-line no-magic-numbers
-	).join("") + (str.length % 2 ? str[str.length - 1] : "");
+      return arr;
+    },
+    []
+  // eslint-disable-next-line no-magic-numbers
+  ).join("") + (str.length % 2 ? str[str.length - 1] : "");
 };
 
 export const unscrambleString = (str: string, key: string): string => {
@@ -139,26 +138,25 @@ export const unscrambleString = (str: string, key: string): string => {
 };
 
 export const scrambleString = (str: string, key: string): string => {
-	/*
-	str is the puzzle's solution in column-major order, omitting black squares:
-	i.e. if the puzzle is:
-		C A T
-		# # A
-		# # R
-	solution is CATAR
+  /*
+  str is the puzzle's solution in column-major order, omitting black squares:
+  i.e. if the puzzle is:
+    C A T
+    # # A
+    # # R
+  solution is CATAR
 
-
-	Key is a 4-digit number in the range 1000 <= key <= 9999
+  Key is a 4-digit number in the range 1000 <= key <= 9999
 
   */
 
-	Array.from(padStart(key, PUZZLE_KEY_LENGTH, "0")).forEach(
-		(k) => {
-			str = shift(str, key);
-			str = str.substring(Number(k)) + str.substring(0, Number(k));
-			str = shuffle(str);
-		}
-	);
+  Array.from(padStart(key, PUZZLE_KEY_LENGTH, "0")).forEach(
+    (k) => {
+      str = shift(str, key);
+      str = str.substring(Number(k)) + str.substring(0, Number(k));
+      str = shuffle(str);
+    }
+  );
 
-	return str;
+  return str;
 };

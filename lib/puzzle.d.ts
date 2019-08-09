@@ -6,7 +6,7 @@ import { IPuzzleClues, IPuzzleInfo, IPuzzleConstructorArgs, IPuzzleJSON } from "
 export default class Puzzle {
     /**
      * The definition of the puzzle grid. It is represented as an array of rows, so
-     *	`grid[0]` is the first row of the puzzle.
+     * `grid[0]` is the first row of the puzzle.
      */
     grid: Grid;
     /**
@@ -15,13 +15,12 @@ export default class Puzzle {
     clues: IPuzzleClues;
     info: IPuzzleInfo;
     /**
-       * A structure representing the current solution as the user has filled it out.
-       *	The structure is similar to {@link Grid}, but
-     *	each item is a string containing the user's current answer--an empty string
-     *	if the corresponding grid cell is not filled in, a non-empty string if it's
-     *	filled in.
+     * A structure representing the current solution as the user has filled it out.
+     * The structure is similar to {@link Grid}, but each item is a string
+     * containing the user's current answer--an empty string if the corresponding
+     * grid cell is not filled in, a non-empty string if it's filled in.
      */
-    userSolution: Array<(string | null)[]>;
+    userSolution: Array<Array<string | null>>;
     constructor({ grid, 
     /**
      * A list of clues for across and down, with each collection having the

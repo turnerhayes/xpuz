@@ -1,6 +1,6 @@
 import IPUZ from "./parsers/ipuz";
-import PUZ from "./parsers/puz";
 import JPZ from "./parsers/jpz";
+import PUZ from "./parsers/puz";
 
 import Puzzle from "./puzzle";
 
@@ -11,7 +11,7 @@ import * as Utils from "./utils";
 export { Utils };
 
 export const Parsers = {
-	IPUZ,
-	PUZ,
-	JPZ,
+  IPUZ,
+  PUZ,
+  JPZ,
 };

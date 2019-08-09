@@ -1,184 +1,184 @@
 import each from "lodash/each";
+import { Grid, GridCell, IInputCell } from "./Grid";
 import Puzzle from "./puzzle";
-import { GridCell, IInputCell, Grid } from "./Grid";
-import { IPuzzleClues, ClueMap } from "./puzzle-utils";
+import { IClueMap, IPuzzleClues } from "./puzzle-utils";
 
 export default class PuzzleBuilder {
-	private grid: Grid = [];
+  private grid: Grid = [];
 
-	private clues: IPuzzleClues = {
-		across: {},
-		down: {},
-	};
+  private clues: IPuzzleClues = {
+    across: {},
+    down: {},
+  };
 
-	private clueArrays = {
-		across: [],
-		down: [],
-	};
+  private clueArrays = {
+    across: [],
+    down: [],
+  };
 
-	private openRow?: GridCell[];
+  private openRow?: GridCell[];
 
-	private cell?: GridCell|{};
+  private cell?: GridCell|{};
 
-	addRow(): this {
-		this.closeRow();
+  public addRow(): this {
+    this.closeRow();
 
-		this.openRow = [];
+    this.openRow = [];
 
-		return this;
-	}
+    return this;
+  }
 
-	addCell() {
-		if (!this.openRow) {
-			throw new Error("`addCell` called without an open row");
-		}
+  public addCell() {
+    if (!this.openRow) {
+      throw new Error("`addCell` called without an open row");
+    }
 
-		return this._addCell();
-	}
+    return this._addCell();
+  }
 
-	solution(solutionLetter: string) {
-		if (!this.cell) {
-			throw new Error("`solution` called without a cell");
-		}
+  public solution(solutionLetter: string) {
+    if (!this.cell) {
+      throw new Error("`solution` called without a cell");
+    }
 
-		(this.cell as IInputCell).solution = solutionLetter;
+    (this.cell as IInputCell).solution = solutionLetter;
 
-		return this;
-	}
+    return this;
+  }
 
-	addBlockCell() {
-		if (!this.openRow) {
-			throw new Error("`addBlockCell` called without an open row");
-		}
+  public addBlockCell() {
+    if (!this.openRow) {
+      throw new Error("`addBlockCell` called without an open row");
+    }
 
-		return this._addCell({
-			isBlockCell: true
-		});
-	}
+    return this._addCell({
+      isBlockCell: true
+    });
+  }
 
-	addAcrossClues(clues: ClueMap) {
-		each(
-			clues,
-			(clueText, clueNumber) => {
-				this.clues.across[clueNumber] = clueText;
-			}
-		);
+  public addAcrossClues(clues: IClueMap) {
+    each(
+      clues,
+      (clueText, clueNumber) => {
+        this.clues.across[clueNumber] = clueText;
+      }
+    );
 
-		return this;
-	}
+    return this;
+  }
 
-	addAcrossClue(clueNumber: number|string, clueText: string) {
-		const clues: ClueMap = {};
+  public addAcrossClue(clueNumber: number|string, clueText: string) {
+    const clues: IClueMap = {};
 
-		clues[clueNumber] = clueText;
+    clues[clueNumber] = clueText;
 
-		return this.addAcrossClues(clues);
-	}
+    return this.addAcrossClues(clues);
+  }
 
-	addDownClues(clues: ClueMap) {
-		each(
-			clues,
-			(clueText, clueNumber) => {
-				this.clues.down[clueNumber] = clueText;
-			}
-		);
+  public addDownClues(clues: IClueMap) {
+    each(
+      clues,
+      (clueText, clueNumber) => {
+        this.clues.down[clueNumber] = clueText;
+      }
+    );
 
-		return this;
-	}
+    return this;
+  }
 
-	addDownClue(clueNumber: number|string, clueText: string) {
-		const clues: ClueMap = {};
+  public addDownClue(clueNumber: number|string, clueText: string) {
+    const clues: IClueMap = {};
 
-		clues[clueNumber] = clueText;
+    clues[clueNumber] = clueText;
 
-		return this.addDownClues(clues);
-	}
+    return this.addDownClues(clues);
+  }
 
-	build() {
-		this.closeRow();
+  public build() {
+    this.closeRow();
 
-		let maxRowLength = 0;
+    let maxRowLength = 0;
 
-		each(
-			this.grid,
-			(row) => {
-				if (row.length > maxRowLength) {
-					maxRowLength = row.length;
-				}
-			}
-		);
+    each(
+      this.grid,
+      (row) => {
+        if (row.length > maxRowLength) {
+          maxRowLength = row.length;
+        }
+      }
+    );
 
-		each(
-			this.grid,
-			(row) => {
-				if (row.length < maxRowLength) {
-					this.openRow = row;
+    each(
+      this.grid,
+      (row) => {
+        if (row.length < maxRowLength) {
+          this.openRow = row;
 
-					this.addBlocks(maxRowLength - row.length + 1);
-				}
-			}
-		);
+          this.addBlocks(maxRowLength - row.length + 1);
+        }
+      }
+    );
 
-		return new Puzzle({
-			grid: this.grid,
-			clues: this.clues
-		});
-	}
+    return new Puzzle({
+      grid: this.grid,
+      clues: this.clues
+    });
+  }
 
-	toString() {
-		return "[object PuzzleBuilder]";
-	}
+  public toString() {
+    return "[object PuzzleBuilder]";
+  }
 
-	private _addCell(
-		options: {
-			isBlockCell?: boolean,
-			solution?: string,
-		} = {}
-	): this {
-		this.closeCell();
+  private _addCell(
+    options: {
+      isBlockCell?: boolean,
+      solution?: string,
+    } = {}
+  ): this {
+    this.closeCell();
 
-		this.cell = options.isBlockCell ?
-			{ isBlockCell: true } :
-			{};
+    this.cell = options.isBlockCell ?
+      { isBlockCell: true } :
+      {};
 
-		if (options.solution) {
-			(this.cell as IInputCell).solution = options.solution;
-		}
+    if (options.solution) {
+      (this.cell as IInputCell).solution = options.solution;
+    }
 
-		return this;
-	}
+    return this;
+  }
 
-	private addBlocks(count: number): this {
-		for (let i = 0; i < count; i++) {
-			this.addBlockCell();
-		}
+  private addBlocks(count: number): this {
+    for (let i = 0; i < count; i++) {
+      this.addBlockCell();
+    }
 
-		return this;
-	}
+    return this;
+  }
 
-	private closeRow(): this {
-		if (!this.openRow) {
-			return this;
-		}
+  private closeRow(): this {
+    if (!this.openRow) {
+      return this;
+    }
 
-		this.closeCell();
+    this.closeCell();
 
-		this.grid.push(this.openRow);
+    this.grid.push(this.openRow);
 
-		this.openRow = undefined;
+    this.openRow = undefined;
 
-		return this;
-	}
+    return this;
+  }
 
-	private closeCell(): this {
-		if (!this.openRow || !this.cell) {
-			return this;
-		}
+  private closeCell(): this {
+    if (!this.openRow || !this.cell) {
+      return this;
+    }
 
-		this.openRow.push(this.cell);
+    this.openRow.push(this.cell);
 
-		this.cell = undefined;
+    this.cell = undefined;
 
-		return this;
-	}
+    return this;
+  }
 }

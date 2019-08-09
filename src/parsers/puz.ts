@@ -1,59 +1,59 @@
+import iconv from "iconv-lite";
 import chunk from "lodash/chunk";
-import flatten from "lodash/flatten";
 import compact from "lodash/compact";
 import findKey from "lodash/findKey";
-import iconv from "iconv-lite";
+import flatten from "lodash/flatten";
 
-import Puzzle from "../puzzle";
+import { BlockGridCell, Grid, GridCell, IInputCell } from "../Grid";
 import ImmutablePuzzle from "../immutable/puzzle";
-import PUZReader from "./puz/puz-reader";
-import { IPuzzleConstructorArgs, IPuzzleClues } from "../puzzle-utils";
-import { IInputCell, BlockGridCell, GridCell, Grid } from "../Grid";
+import Puzzle from "../puzzle";
+import { IPuzzleClues, IPuzzleConstructorArgs } from "../puzzle-utils";
 import {
+  ExtensionName,
+  IHeaderData,
   PuzzleType,
   SolutionState,
-  IHeaderData,
-  ExtensionName,
 } from "./puz/common";
 import {
-  transposeGrid,
-  restoreSolution,
-  scrambleString,
-  unscrambleString,
-  padStart,
-} from "./puz/grid-string-utils";
-import {
-  HEADER_BUFFER_LENGTH,
+  ACROSS_AND_DOWN_STRING,
+  BLOCK_CELL_VALUE,
+  BLOCK_CELL_VALUE_REGEX,
   CHECKSUM_BUFFER_LENGTH,
+  EXTENSION_HEADER_LENGTH,
+  EXTENSION_LENGTH_BUFFER_LENGTH,
+  EXTENSION_NAME_LENGTH,
+  HEADER_BUFFER_LENGTH,
+  HEADER_CHECKSUM_BYTE_LENGTH,
+  MAGIC_CHECKSUM_BYTE_LENGTH,
+  MAXIMUM_KEY_VALUE,
+  MINIMUM_KEY_VALUE,
   NUMBER_OF_CLUES_BUFFER_LENGTH,
   PUZZLE_TYPE_BUFFER_LENGTH,
   SOLUTION_STATE_BUFFER_LENGTH,
-  HEADER_CHECKSUM_BYTE_LENGTH,
-  MAGIC_CHECKSUM_BYTE_LENGTH,
   UNKNOWN1_BYTE_LENGTH,
   UNKNOWN2_BYTE_LENGTH,
-  EXTENSION_HEADER_LENGTH,
-  EXTENSION_NAME_LENGTH,
-  EXTENSION_LENGTH_BUFFER_LENGTH,
-  BLOCK_CELL_VALUE,
-  BLOCK_CELL_VALUE_REGEX,
-  ACROSS_AND_DOWN_STRING,
-  MINIMUM_KEY_VALUE,
-  MAXIMUM_KEY_VALUE,
 } from "./puz/constants";
 import { generate } from "./puz/generator";
+import {
+  padStart,
+  restoreSolution,
+  scrambleString,
+  transposeGrid,
+  unscrambleString,
+} from "./puz/grid-string-utils";
+import PUZReader from "./puz/puz-reader";
 
 export type PuzzleContent = string|Buffer|ArrayBufferLike;
 
 interface IExtensionInfo {
-	name: ExtensionName;
-	checksum: number;
-	data: Buffer;
-	[key: string]: any,
+  name: ExtensionName;
+  checksum: number;
+  data: Buffer;
+  [key: string]: any;
 }
 
-type ExtensionMap = {
-	[name: string]: IExtensionInfo,
+interface IExtensionMap {
+  [name: string]: IExtensionInfo;
 }
 
 export interface ITimingState {
@@ -62,19 +62,18 @@ export interface ITimingState {
 }
 
 export interface ICurrentCellStates {
-  PreviouslyIncorrect: boolean,
-  CurrentlyIncorrect: boolean,
-  AnswerGiven: boolean,
-  Circled: boolean,
+  PreviouslyIncorrect: boolean;
+  CurrentlyIncorrect: boolean;
+  AnswerGiven: boolean;
+  Circled: boolean;
 }
 
 export const enum CellStates {
-	PreviouslyIncorrect = 0x10,
-	CurrentlyIncorrect = 0x20,
-	AnswerGiven = 0x40,
-	Circled = 0x80,
+  PreviouslyIncorrect = 0x10,
+  CurrentlyIncorrect = 0x20,
+  AnswerGiven = 0x40,
+  Circled = 0x80,
 }
-
 
 /**
  * Parser class for PUZ-formatted puzzles.
@@ -82,27 +81,27 @@ export const enum CellStates {
  * @constructor
  */
 class PUZParser<T extends Puzzle|ImmutablePuzzle = Puzzle> {
-	/**
-	 * Parses a file in .puz format into a {@link Puzzle} object.
-	 * 
-	 * If the puzzle is not locked and an `options.solutionKey` was specified,
-	 * the solutionKey will be ignored.
-	 *
-	 * @throws if the puzzle is locked and an invalid (or no)
-	 * `options.solutionKey` was provided
-	 */
-	async parse(
-		/**
-		 * the .puz file to parse, either as a file path or a {@link Buffer} or 
-		 * {@link ArrayBuffer} containing the puzzle content
-		 */
-		path: PuzzleContent,
-		options: {
+  /**
+   * Parses a file in .puz format into a {@link Puzzle} object.
+   *
+   * If the puzzle is not locked and an `options.solutionKey` was specified,
+   * the solutionKey will be ignored.
+   *
+   * @throws if the puzzle is locked and an invalid (or no)
+   * `options.solutionKey` was provided
+   */
+  public async parse(
+    /**
+     * the .puz file to parse, either as a file path or a {@link Buffer} or
+     * {@link ArrayBuffer} containing the puzzle content
+     */
+    path: PuzzleContent,
+    options: {
       solutionKey?: string,
       converter?: (puzzle: Puzzle) => T,
     } = {}
-	): Promise<T> {
-		const puzzleData = await this.getPuzzleData(path, options.solutionKey);
+  ): Promise<T> {
+    const puzzleData = await this.getPuzzleData(path, options.solutionKey);
     const puzzle = new Puzzle(puzzleData);
 
     if (options.converter) {
@@ -110,29 +109,29 @@ class PUZParser<T extends Puzzle|ImmutablePuzzle = Puzzle> {
     }
 
     return puzzle as T;
-	}
+  }
 
-	/**
-	 * Given a {@link module:xpuz/puzzle~Puzzle|Puzzle} object, returns a {@link external:Buffer|Buffer}
-	 * containing the puzzle in .puz format.
-	 *
-	 * @throws if `options.scrambled` is true but `options.solutionKey` is not a 4-digit integer
-	 *	(between 1000 and 9999, inclusive).
-	 */
-	generate(
-		puzzle: T,
-		options: {
-			/**
-			 * If true, the puzzle's solution will be scrambled
+  /**
+   * Given a {@link module:xpuz/puzzle~Puzzle|Puzzle} object, returns a {@link external:Buffer|Buffer}
+   * containing the puzzle in .puz format.
+   *
+   * @throws if `options.scrambled` is true but `options.solutionKey` is not a 4-digit integer
+   * (between 1000 and 9999, inclusive).
+   */
+  public generate(
+    puzzle: T,
+    options: {
+      /**
+       * If true, the puzzle's solution will be scrambled
        *
        * @deprecated ignored; will be scrambled if solutionKey is defined and non-empty
-			 */
-			scrambled?: boolean,
+       */
+      scrambled?: boolean,
       solutionKey?: string,
-		} = {}
-	): Buffer  {
+    } = {}
+  ): Buffer  {
     const puzzleObj = puzzle.toJSON();
-    
+
     return generate(puzzleObj, options.solutionKey);
   }
 
@@ -147,7 +146,7 @@ class PUZParser<T extends Puzzle|ImmutablePuzzle = Puzzle> {
       width: number,
       height: number,
       key: string,
-    },
+    }
   ): string {
     const transposed = transposeGrid(
       answer,
@@ -175,7 +174,7 @@ class PUZParser<T extends Puzzle|ImmutablePuzzle = Puzzle> {
 
     return result;
   }
-  
+
   private async getPuzzleData(
     path: PuzzleContent,
     solutionKey?: string
@@ -201,7 +200,7 @@ class PUZParser<T extends Puzzle|ImmutablePuzzle = Puzzle> {
           height: header.height,
           answer,
           key: solutionKey,
-        },
+        }
       );
     }
 
@@ -250,7 +249,7 @@ class PUZParser<T extends Puzzle|ImmutablePuzzle = Puzzle> {
   private parseExtensions(reader: PUZReader) {
     let remainingLength = reader.size() - reader.tell();
 
-    const extensions: ExtensionMap = {};
+    const extensions: IExtensionMap = {};
 
     while (remainingLength >= EXTENSION_HEADER_LENGTH) {
       const name = reader.readString(
@@ -278,7 +277,7 @@ class PUZParser<T extends Puzzle|ImmutablePuzzle = Puzzle> {
     return extensions;
   }
 
-  private processExtensions(extensions: ExtensionMap, grid: Grid) {
+  private processExtensions(extensions: IExtensionMap, grid: Grid) {
     if (extensions.RTBL) {
       let rebusSolutionsString = iconv.decode(
         extensions.RTBL.data,
@@ -312,7 +311,7 @@ class PUZParser<T extends Puzzle|ImmutablePuzzle = Puzzle> {
             if (grbsBoardValue === 0) {
               return;
             }
-  
+
             (cell as IInputCell).solution = rebusSolutions![
               grbsBoardValue - 1
             ];
@@ -354,10 +353,12 @@ class PUZParser<T extends Puzzle|ImmutablePuzzle = Puzzle> {
       cellStates = Array.from(extensions.GEXT.data).map(
         (b) => {
           return {
+            // tslint:disable:no-bitwise
             PreviouslyIncorrect: !!(b & CellStates.PreviouslyIncorrect),
             CurrentlyIncorrect: !!(b & CellStates.CurrentlyIncorrect),
             AnswerGiven: !!(b & CellStates.AnswerGiven),
-            Circled: !!(b & CellStates.Circled)
+            Circled: !!(b & CellStates.Circled),
+            // tslint:enable:no-bitwise
           };
         }
       );
@@ -383,14 +384,14 @@ class PUZParser<T extends Puzzle|ImmutablePuzzle = Puzzle> {
   private generateGridAndClues(
     answer: string,
     clueList: string[],
-    width: number,
+    width: number
   ): {
     grid: Grid,
     clues: IPuzzleClues,
   } {
     const answers = this.unflattenSolution(answer, width);
 
-    const _isBlockCell = (x: number, y: number) => {
+    const isBlockCell = (x: number, y: number) => {
       return answers[y][x] === BLOCK_CELL_VALUE;
     };
 
@@ -411,48 +412,49 @@ class PUZParser<T extends Puzzle|ImmutablePuzzle = Puzzle> {
       const row: GridCell[] = [];
 
       for (let x = 0; x < width; x++) {
-        const cell: GridCell = _isBlockCell(x, y) ?
+        const cell: GridCell = isBlockCell(x, y) ?
           { isBlockCell: true, } :
           { solution: answers[y][x], };
 
         if (!cell.isBlockCell) {
-          let down = false, across = false;
-  
+          let down = false;
+          let across = false;
+
           if (
             (
               x === 0 ||
-              _isBlockCell(x - 1, y)
+              isBlockCell(x - 1, y)
             ) && (
               x + 1 < width &&
-              !_isBlockCell(x + 1, y)
+              !isBlockCell(x + 1, y)
             )
           ) {
             across = true;
           }
-  
+
           if (
             (
               y === 0 ||
-              _isBlockCell(x, y - 1)
+              isBlockCell(x, y - 1)
             ) && (
               y + 1 < height &&
-              !_isBlockCell(x, y + 1)
+              !isBlockCell(x, y + 1)
             )
           ) {
             down = true;
           }
-  
+
           if (across || down) {
             (cell as IInputCell).clueNumber = ++clueCount;
           }
-  
+
           if (across) {
             clues.across[clueCount] = clueList[clueListIndex++];
           }
-  
+
           if (down) {
             clues.down[clueCount] = clueList[clueListIndex++];
-          }          
+          }
         }
 
         row.push(cell);

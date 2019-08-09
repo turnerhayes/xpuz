@@ -1,4 +1,3 @@
-
 import { Map, OrderedMap } from "immutable";
 import {
   Grid,
@@ -6,46 +5,48 @@ import {
 } from "./Grid";
 import Puzzle from "./puzzle";
 
-export type GetterFunction = (path: (string|number)[]) => any;
+export type GetterFunction = (path: Array<string|number>) => any;
 
-export type SetterFunction<T = any> = (path: (string|number)[], value: any) => T;
+export type SetterFunction<T = any> = (path: Array<string|number>, value: any) => T;
 
 export type SizeOfFunction = (item: any) => number;
 
 export type DirectionKey = "across"|"down";
 
-export type ClueMap = {[clueNumber: string]: string};
+export interface IClueMap {
+  [clueNumber: string]: string;
+}
 
 export interface IPuzzleInfo {
-	title?: string;
-	author?: string;
-	publisher?: string;
-	copyright?: string;
-	intro?: string;
-	difficulty?: any;
-	formatExtra?: any;	
+  title?: string;
+  author?: string;
+  publisher?: string;
+  copyright?: string;
+  intro?: string;
+  difficulty?: any;
+  formatExtra?: any;
 }
 
 export interface IPuzzleClues {
-  across: ClueMap,
-  down: ClueMap,
+  across: IClueMap;
+  down: IClueMap;
 }
 
 export interface IPuzzleJSON {
-  grid: Grid,
-  clues: IPuzzleClues,
-  userSolution: (string|null)[][],
-  info: IPuzzleInfo,
-};
+  grid: Grid;
+  clues: IPuzzleClues;
+  userSolution: Array<Array<string|null>>;
+  info: IPuzzleInfo;
+}
 
 export type ImmutablePuzzleClues = Map<DirectionKey, OrderedMap<number, string>>;
 
 export interface IPuzzleConstructorArgs {
-	grid: Grid;
-	clues: IPuzzleClues;
-	info?: IPuzzleInfo;
-  userSolution?: (string|null)[][];
-  solution?: (string|null)[][];
+  grid: Grid;
+  clues: IPuzzleClues;
+  info?: IPuzzleInfo;
+  userSolution?: Array<Array<string|null>>;
+  solution?: Array<Array<string|null>>;
 }
 
 const getWidthAndHeight = (
@@ -63,14 +64,15 @@ const getWidthAndHeight = (
   }
 
   return { width, height };
-}
+};
 
 /**
  * Finds which across and down clues a grid cell is a member of.
  *
- * @return {{across: ?number, down: ?number}} the clue numbers for the clues that contain this cell
- *	(one or both of `across` and `down` keys may be populated)
-  */
+ * @return {{across: ?number, down: ?number}} the clue numbers for the clues
+ * that contain this cell (one or both of `across` and `down` keys may be
+ * populated)
+ */
 export const findContainingClues = (
   {
     grid,
@@ -117,7 +119,7 @@ export const findContainingClues = (
       )
     );
   }
-  
+
   const clueNumber = get([
     rowIndex,
     columnIndex,
@@ -138,11 +140,10 @@ export const findContainingClues = (
       (columnIndex < width - 1 && !get([rowIndex, columnIndex + 1, "isBlockCell"]))
     ) {
       containingClues.across = clueNumber;
-    }
-    else if (
+    } else if (
       // There is at least one fillable cell below this
       rowIndex < height - 1 && !get([rowIndex + 1, columnIndex, "isBlockCell"])
-    ){
+    ) {
       // At least one cell exists to the left of this cell; this
       // is not an across clue number. It must be a down clue number.
       containingClues.down = clueNumber;
@@ -160,8 +161,7 @@ export const findContainingClues = (
       !get([rowIndex, columnIndex + 1, "isBlockCell"])
     ) {
       containingClues.across = clueNumber;
-    }
-    else {
+    } else {
       for (let i = columnIndex - 1; i >= 0; i--) {
         if (get([rowIndex, i, "isBlockCell"])) {
           break;
@@ -187,13 +187,12 @@ export const findContainingClues = (
       !get([rowIndex + 1, columnIndex, "isBlockCell"])
     ) {
       containingClues.down = clueNumber;
-    }
-    else {
+    } else {
       for (let i = rowIndex; i >= 0; i--) {
         if (get([i, columnIndex, "isBlockCell"])) {
           break;
         }
-        
+
         if (
           // There is at least one fillable cell below it
           i < height - 1 && !get([i + 1, columnIndex, "isBlockCell"])
@@ -205,7 +204,7 @@ export const findContainingClues = (
   }
 
   return containingClues;
-}
+};
 
 /**
  * Determines whether a cell in the grid is at the start of a down or across clue (or
@@ -246,7 +245,7 @@ export const hasClueNumber = (
     if (!sizeOf) {
       throw new Error("No width/height specified, and no sizeOf function");
     }
-    
+
     (
       { width, height } = getWidthAndHeight(
         grid,
@@ -275,7 +274,7 @@ export const hasClueNumber = (
   }
 
   return false;
-}
+};
 
 /**
  * Updates the grid with the correct cell information (clue numbers, etc.)
