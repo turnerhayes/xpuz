@@ -1,12 +1,12 @@
 {
   "name": "xpuz",
-  "version": "1.2.0",
+  "version": "1.2.1",
   "description": "Parses and creates crossword puzzle files",
   "main": "lib/index.js",
   "module": "src/index.js",
   "browser": "dist/xpuz.js",
   "scripts": {
-    "test": "mocha --compilers js:babel-core/register test",
+    "test": "mocha --compilers js:@babel/register test",
     "prepublish": "npm run compile && npm run build",
     "build": "NODE_ENV=production webpack -p",
     "compile": "rm -rf lib; babel -s true -d lib src",
@@ -42,16 +42,17 @@
     "immutable.js"
   ],
   "devDependencies": {
-    "babel-cli": "^6.26.0",
-    "babel-core": "^6.26.3",
+    "@babel/cli": "^7.7.7",
+    "@babel/core": "^7.7.7",
+    "@babel/plugin-proposal-class-properties": "^7.7.4",
+    "@babel/plugin-transform-modules-commonjs": "^7.7.5",
+    "@babel/preset-env": "^7.7.7",
+    "@babel/register": "^7.7.7",
     "babel-eslint": "^8.2.6",
     "babel-loader": "^7.1.5",
-    "babel-plugin-transform-es2015-modules-commonjs": "^6.26.2",
     "babel-plugin-transform-undefined-to-void": "^6.9.4",
-    "babel-preset-env": "^1.7.0",
-    "babel-preset-stage-0": "^6.24.1",
     "chai": "^4.1.2",
-    "chokidar": "^1.7.0",
+    "chokidar": "^3.3.1",
     "eslint": "^4.19.1",
     "eslint-loader": "^2.1.0",
     "expect.js": "^0.3.1",
@@ -60,7 +61,7 @@
     "jsdoc": "^3.6.3",
     "mocha": "^5.2.0",
     "temp": "^0.8.3",
-    "webpack": "^4.17.1",
+    "webpack": "^4.41.4",
     "webpack-cli": "^3.1.0"
   },
   "dependencies": {
@@ -69,7 +70,7 @@
     "debug": "^3.1.0",
     "hash-it": "^2.1.2",
     "iconv-lite": "^0.4.24",
-    "lodash": "^4.17.10"
+    "lodash": "^4.17.15"
   },
   "peerDependencies": {
     "immutable": ">=3"
