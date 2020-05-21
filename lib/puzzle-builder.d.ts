@@ -1,5 +1,5 @@
 import Puzzle from "./puzzle";
-import { ClueMap } from "./puzzle-utils";
+import { IClueMap } from "./puzzle-utils";
 export default class PuzzleBuilder {
     private grid;
     private clues;
@@ -10,9 +10,9 @@ export default class PuzzleBuilder {
     addCell(): this;
     solution(solutionLetter: string): this;
     addBlockCell(): this;
-    addAcrossClues(clues: ClueMap): this;
+    addAcrossClues(clues: IClueMap): this;
     addAcrossClue(clueNumber: number | string, clueText: string): this;
-    addDownClues(clues: ClueMap): this;
+    addDownClues(clues: IClueMap): this;
     addDownClue(clueNumber: number | string, clueText: string): this;
     build(): Puzzle;
     toString(): string;

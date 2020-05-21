@@ -1,6 +1,6 @@
 import IPUZ from "./parsers/ipuz";
-import PUZ from "./parsers/puz";
 import JPZ from "./parsers/jpz";
+import PUZ from "./parsers/puz";
 import Puzzle from "./puzzle";
 export { Puzzle };
 import * as Utils from "./utils";

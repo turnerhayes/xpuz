@@ -3,10 +3,10 @@
  *
  * @module xpuz/parsers/ipuz
  */
-import Puzzle from "../puzzle";
 import ImmutablePuzzle from "../immutable/puzzle";
+import Puzzle from "../puzzle";
 export interface IIPUZPuzzle {
-    puzzle: [][];
+    puzzle: Array<[]>;
     dimensions: {
         width: number;
         height: number;
@@ -18,8 +18,8 @@ export interface IIPUZPuzzle {
     difficulty: any;
     intro: string;
     clues: {
-        Across: [number, string][];
-        Down: [number, string][];
+        Across: Array<[number, string]>;
+        Down: Array<[number, string]>;
     };
 }
 /**

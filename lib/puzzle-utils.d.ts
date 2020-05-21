@@ -4,9 +4,9 @@ export declare type GetterFunction = (path: Array<string | number>) => any;
 export declare type SetterFunction<T = any> = (path: Array<string | number>, value: any) => T;
 export declare type SizeOfFunction = (item: any) => number;
 export declare type DirectionKey = "across" | "down";
-export declare type ClueMap = {
+export interface IClueMap {
     [clueNumber: string]: string;
-};
+}
 export interface IPuzzleInfo {
     title?: string;
     author?: string;
@@ -17,8 +17,8 @@ export interface IPuzzleInfo {
     formatExtra?: any;
 }
 export interface IPuzzleClues {
-    across: ClueMap;
-    down: ClueMap;
+    across: IClueMap;
+    down: IClueMap;
 }
 export interface IPuzzleJSON {
     grid: Grid;
@@ -37,9 +37,10 @@ export interface IPuzzleConstructorArgs {
 /**
  * Finds which across and down clues a grid cell is a member of.
  *
- * @return {{across: ?number, down: ?number}} the clue numbers for the clues that contain this cell
- *	(one or both of `across` and `down` keys may be populated)
-  */
+ * @return {{across: ?number, down: ?number}} the clue numbers for the clues
+ * that contain this cell (one or both of `across` and `down` keys may be
+ * populated)
+ */
 export declare const findContainingClues: ({ grid, rowIndex, columnIndex, get, sizeOf, width, height, }: {
     grid: import("./Grid").GridCell[][] | import("immutable").List<import("immutable").List<import("./Grid").ImmutableGridCell>>;
     rowIndex: number;

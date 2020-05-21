@@ -1,20 +1,26 @@
 module.exports = {
 	"plugins": [
-		"transform-undefined-to-void"
+		"transform-undefined-to-void",
+		"@babel/plugin-proposal-class-properties"
 	],
 	"presets": [
-		"@babel/preset-env",
 		"@babel/preset-typescript"
+		[
+			"@babel/preset-env",
+			{
+				"modules": false
+			}
+		]
 	],
 	"env": {
 		"production": {
 			"only": [
 				"src"
-			],
+			]
 		},
 		"test": {
 			"plugins": [
-				"transform-es2015-modules-commonjs",
+				"@babel/plugin-transform-modules-commonjs",
 				"dynamic-import-node"
 			]
 		}

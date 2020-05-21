@@ -1,6 +1,6 @@
 /// <reference types="node" />
-import Puzzle from "../puzzle";
 import ImmutablePuzzle from "../immutable/puzzle";
+import Puzzle from "../puzzle";
 export declare type PuzzleContent = string | Buffer | ArrayBufferLike;
 export interface ITimingState {
     elapsed: number;
@@ -47,13 +47,13 @@ declare class PUZParser<T extends Puzzle | ImmutablePuzzle = Puzzle> {
      * containing the puzzle in .puz format.
      *
      * @throws if `options.scrambled` is true but `options.solutionKey` is not a 4-digit integer
-     *	(between 1000 and 9999, inclusive).
+     * (between 1000 and 9999, inclusive).
      */
     generate(puzzle: T, options?: {
         /**
          * If true, the puzzle's solution will be scrambled
-   *
-   * @deprecated ignored; will be scrambled if solutionKey is defined and non-empty
+         *
+         * @deprecated ignored; will be scrambled if solutionKey is defined and non-empty
          */
         scrambled?: boolean;
         solutionKey?: string;

@@ -1,8 +1,9 @@
+import {BaseEncodingOptions} from "fs";
 import fs from "fs";
 
 // fs is stubbed out for browser builds
 export default fs.readFile ?
-  (path: string, options?: { encoding: string }) => new Promise<string|Buffer>(
+  (path: string, options?: BaseEncodingOptions) => new Promise<string|Buffer>(
     (resolve, reject) => fs.readFile(
       path,
       options,

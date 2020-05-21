@@ -1,5 +1,5 @@
 import { Grid } from "./Grid";
-import { IPuzzleClues, IPuzzleInfo, IPuzzleConstructorArgs, IPuzzleJSON } from "./puzzle-utils";
+import { IPuzzleClues, IPuzzleConstructorArgs, IPuzzleInfo, IPuzzleJSON } from "./puzzle-utils";
 /**
  * Represents a puzzle object
  */

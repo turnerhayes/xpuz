@@ -8,9 +8,8 @@
   "scripts": {
     "test": "mocha --require ts-node/register",
     "test:watch": "mocha-webpack --watch --webpack-config ./webpack/test.config.js test",
-    "prepublish": "npm run compile && npm run build",
-    "prebuild": "rm -rf dist",
-    "build": "NODE_ENV=production webpack -p",
+    "prepublishOnly": "npm run clean && NODE_ENV=production npm run compile && NODE_ENV=production webpack -p",
+    "clean": "rm -rf dist",
     "precompile": "rm -rf lib",
     "compile": "tsc",
     "watch": "rm -rf lib; tsc --watch",
@@ -67,7 +66,7 @@
     "tslint": "^5.18.0",
     "tslint-loader": "^3.5.4",
     "typescript": "^3.5.3",
-    "webpack": "^4.36.1",
+    "webpack": "^4.41.4",
     "webpack-cli": "^3.1.0"
   },
   "dependencies": {
@@ -76,7 +75,7 @@
     "debug": "^3.1.0",
     "hash-it": "^2.1.2",
     "iconv-lite": "^0.4.24",
-    "lodash": "^4.17.10"
+    "lodash": "^4.17.15"
   },
   "peerDependencies": {
     "immutable": ">=3"
